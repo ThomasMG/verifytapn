@@ -8,3 +8,5 @@ target_link_libraries(verifytapn-${ARCH_TYPE} PRIVATE
 	ReachabilityChecker
         -ldbm -lbase -ludebug -lhash
 )
+
+add_dependencies(verifytapn-${ARCH_TYPE} dbm2-ext)
