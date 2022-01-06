@@ -4,6 +4,7 @@
 #include <limits>
 #include <iostream>
 #include <dbm/constraints.h>
+#include <dbm2/bound_t.h>
 
 namespace VerifyTAPN {
 	namespace TAPN {
@@ -31,11 +32,27 @@ namespace VerifyTAPN {
 			inline const int GetUpperBound() const { return upperBound; }
 			inline const bool IsLowerBoundStrict() const { return leftStrict; }
 			inline const bool IsUpperBoundStrict() const { return rightStrict; }
+
+			inline dbm2::bound_t LowerBoundToDBM2Bound() const
+			{
+			    return dbm2::bound_t(-lowerBound, leftStrict);
+			};
 			inline raw_t LowerBoundToDBMRaw() const
 			{
 				return dbm_bound2raw(-lowerBound, leftStrict ? dbm_STRICT : dbm_WEAK);
 			};
 
+            inline dbm2::bound_t UpperBoundToDBM2Bound() const
+            {
+                if(upperBound == std::numeric_limits<int>().max())
+                {
+                    return dbm2::bound_t::inf();
+                }
+                else
+                {
+                    return dbm2::bound_t(upperBound, rightStrict);
+                }
+            };
 			inline raw_t UpperBoundToDBMRaw() const
 			{
 				if(upperBound == std::numeric_limits<int>().max())

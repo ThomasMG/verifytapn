@@ -43,6 +43,12 @@ namespace VerifyTAPN
 
 		dbm.resize(bitSrc, bitDst, bitArraySize, table);
 
+		dbm2::DBM resized_new_dbm(newDimension);
+		for (int i = 0; i < oldDimension; i++)
+		    for (int j = 0; j < oldDimension; j++)
+		        resized_new_dbm._bounds_table.get(i, j) = new_dbm._bounds_table.at(i, j);
+        //TODO: new_dbm = resized_new_dbm;
+
 		unsigned int i = 0;
 		unsigned int newTokenIndex = tokens;
 		for(std::list<int>::const_iterator iter = placeIndices.begin(); iter != placeIndices.end(); ++iter)

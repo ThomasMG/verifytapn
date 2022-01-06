@@ -94,11 +94,19 @@ if (VERIFYTAPN_GetDependencies)
 		    mkdir -p ${EXTERNAL_INSTALL_LOCATION}/lib &&
             ${CMAKE_COMMAND} -E copy_directory <BINARY_DIR>/udbm/lib ${EXTERNAL_INSTALL_LOCATION}/lib
     )
-    ExternalProject_add(dbm2-ext
-        GIT_REPOSITORY git@github.com:DEIS-Tools/DBM.git
-        GIT_TAG main
-        CMAKE_ARGS -DBUILD_TESTING=OFF -DDBM_BuildTests=OFF -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}  -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
-    )
+
+    if (DBM2_PREFIX)
+        add_custom_target( dbm2-ext )
+        link_directories(${DBM2_PREFIX}/lib)
+        include_directories(${DBM2_PREFIX}/include)
+    endif()
+    if (NOT DBM2_PREFIX)
+        ExternalProject_add(dbm2-ext
+            GIT_REPOSITORY git@github.com:DEIS-Tools/DBM.git
+            GIT_TAG main
+            CMAKE_ARGS -DBUILD_TESTING=OFF -DDBM_BuildTests=OFF -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}  -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
+        )
+    endif()
 
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
     include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
