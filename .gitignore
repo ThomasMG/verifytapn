@@ -4,6 +4,7 @@ Release
 .project
 .settings
 build/
+.idea/
 
 cmake-build-debug/
 cmake-build-release/
