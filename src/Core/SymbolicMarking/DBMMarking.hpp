@@ -41,14 +41,14 @@ namespace VerifyTAPN {
 		virtual void Delay()
 		{
 			dbm.up();
-			new_dbm.future();
-			for(unsigned int i = 0; i < NumberOfTokens(); i++)
-			{
-				const TAPN::TimeInvariant& invariant = tapn->GetPlace(GetTokenPlacement(i)).GetInvariant();
-				Constrain(i, invariant);
-				assert(!IsEmpty()); // this should not be possible
-			}
-		};
+            new_dbm.future();
+            for(unsigned int i = 0; i < NumberOfTokens(); i++)
+            {
+                const TAPN::TimeInvariant& invariant = tapn->GetPlace(GetTokenPlacement(i)).GetInvariant();
+                Constrain(i, invariant);
+                assert(!IsEmpty()); // this should not be possible
+            }
+        };
 		virtual void Constrain(int token, const TAPN::TimeInterval& interval)
 		{
 			int clock = mapping.GetMapping(token);
@@ -73,11 +73,11 @@ namespace VerifyTAPN {
 			int clock = mapping.GetMapping(token);
 			bool isLowerBoundSat = dbm.satisfies(0, clock, interval.LowerBoundToDBMRaw());
 			bool isLowerBoundSat2 = new_dbm.is_satisfied(0, clock, interval.LowerBoundToDBM2Bound());
-			assert(isLowerBoundSat = isLowerBoundSat2);
+			assert(isLowerBoundSat == isLowerBoundSat2);
 
 			bool isUpperBoundSat = dbm.satisfies(clock, 0, interval.UpperBoundToDBMRaw());
 			bool isUpperBoundSat2 = new_dbm.is_satisfied(clock, 0, interval.UpperBoundToDBM2Bound());
-			assert(isUpperBoundSat = isUpperBoundSat2);
+			assert(isUpperBoundSat == isUpperBoundSat2);
 
 			bool inappropriateAge = !isLowerBoundSat || !isUpperBoundSat;
 			return !inappropriateAge;

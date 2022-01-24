@@ -25,7 +25,9 @@ namespace VerifyTAPN
 		}
 		out << std::endl;
 		out << "DBM:" << std::endl;
-		//out << dbm;
+		out << dbm;
+        out << "DBM2:" << std::endl;
+        out << new_dbm;
 		out << "FIXME:" << std::endl;
 	}
 }
