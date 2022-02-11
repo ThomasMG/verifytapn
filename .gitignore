@@ -9,3 +9,4 @@ build/
 cmake-build-debug/
 cmake-build-release/
 src/Core/QueryParser/Generated/*
+!src/Core/QueryParser/Generated/.gitkeep
