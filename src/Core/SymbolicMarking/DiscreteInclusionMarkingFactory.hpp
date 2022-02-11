@@ -11,7 +11,7 @@
 
 #include "../VerificationOptions.hpp"
 
-#include "EqualityChecker.h"
+#include "../../EqualityChecker.h"
 
 namespace VerifyTAPN {
 
@@ -41,11 +41,11 @@ public:
 			}
 		}
 		dbm::dbm_t dbm = projectToEQPart(eq, mapping, dbmMarking->GetDBM());
-        dbm2::DBM new_dbm = projectToEQPartDbm2(eq, mapping, dbmMarking->GetDBM2());
+		dbm2::DBM new_dbm = projectToEQPartDbm2(eq, mapping, dbmMarking->GetDBM2());
 
-        EqualityChecker::assertEqualDbms(dbm, new_dbm);
+		EqualityChecker::assertEqualDbms(dbm, new_dbm);
 
-        return new DiscretePartInclusionMarking(dbmMarking->id, eq, inc, mapping, dbm, new_dbm);
+		return new DiscretePartInclusionMarking(dbmMarking->id, eq, inc, mapping, dbm, new_dbm);
 	};
 
 	virtual SymbolicMarking* Convert(StoredMarking* marking) const
@@ -93,7 +93,7 @@ public:
 		DiscretePart dp(dpVec);
 		dbm::dbm_t dbm = ProjectToAllClocks2(dp,mapping, dpiMarking->dbm); // improved speed
 		//dbm::dbm_t dbm = ProjectToAllClocks(dp, mapping, dpiMarking->dbm); // old correct for comparison
-        dbm2::DBM new_dbm = ProjectToAllClocksDbm2(dp, mapping, dpiMarking->new_dbm);
+		dbm2::DBM new_dbm = ProjectToAllClocksDbm2(dp, mapping, dpiMarking->new_dbm);
 
 		TokenMapping identity_mapping;
 		for(unsigned int i = 0; i < dp.size(); i++)
@@ -107,7 +107,7 @@ public:
 		DBMMarking* result =  new DBMMarking(dp, identity_mapping, dbm, new_dbm);
 		result->id = dpiMarking->id;
 
-        EqualityChecker::assertEqualDbms(dbm, new_dbm);
+		EqualityChecker::assertEqualDbms(dbm, new_dbm);
 
 		return result;
 	};
@@ -138,10 +138,16 @@ private:
 		if(place.IsUntimed()) return true;
 
 		dbm2::bound_t lowerBound2 = marking.GetLowerBound2(marking.GetClockIndex(token));
-        if(lowerBound2 == dbm2::bound_t(-place.GetMaxConstant(), true)) return true;
-
 		raw_t lowerBound = marking.GetLowerBound(marking.GetClockIndex(token));
-		if(lowerBound == dbm_bound2raw(-place.GetMaxConstant(), dbm_STRICT)) return true; // TODO: check that == is correct
+
+		assert(dbm_raw2bound(lowerBound) == lowerBound2._n);
+		assert((dbm_raw2strict(lowerBound) == strictness_t::dbm_STRICT && lowerBound2._strict) ||
+		       (dbm_raw2strict(lowerBound) == strictness_t::dbm_WEAK && !lowerBound2._strict));
+
+		if(lowerBound2 == dbm2::bound_t(-place.GetMaxConstant(), true)) return true;
+//		if(lowerBound == dbm_bound2raw(-place.GetMaxConstant(), dbm_STRICT)) return true; // TODO: check that == is correct
+
+
 		return false;
 	};
 
@@ -200,66 +206,66 @@ private:
 	};
 
 	dbm2::DBM projectToEQPartDbm2(const std::vector<int>& eq, TokenMapping& mapping, const dbm2::DBM& dbm) const
-    {
-        unsigned int dim = dbm._bounds_table._number_of_clocks;
-        if(eq.size()+1 == dim) return dbm2::DBM(dbm);
+	{
+		unsigned int dim = dbm._bounds_table._number_of_clocks;
+		if(eq.size()+1 == dim) return dbm2::DBM(dbm);
 
-        unsigned int bitArraySize = (dim % 32 == 0 ? dim/32 : dim/32+1);
-        unsigned int bitSrc[bitArraySize];
-        unsigned int bitDst[bitArraySize];
+		unsigned int bitArraySize = (dim % 32 == 0 ? dim/32 : dim/32+1);
+		unsigned int bitSrc[bitArraySize];
+		unsigned int bitDst[bitArraySize];
 
-        for(unsigned int i = 0; i < bitArraySize; i++)
-        {
-            if(i == 0){
-                bitSrc[i] = 1;
-                bitDst[i] = 1;
-            }else{
-                bitSrc[i] = 0;
-                bitDst[i] = 0;
-            }
-        }
+		for(unsigned int i = 0; i < bitArraySize; i++)
+		{
+			if(i == 0){
+				bitSrc[i] = 1;
+				bitDst[i] = 1;
+			}else{
+				bitSrc[i] = 0;
+				bitDst[i] = 0;
+			}
+		}
 
-        for(unsigned int i = 0; i < dim; i++)
-        {
-            bitSrc[i/32] |= (1 << (i % 32));
-        }
+		for(unsigned int i = 0; i < dim; i++)
+		{
+			bitSrc[i/32] |= (1 << (i % 32));
+		}
 
-        for(unsigned int i = 0; i < eq.size(); i++)
-        {
-            unsigned int arrayIndex = mapping.GetMapping(i)/32;
-            unsigned int offset = mapping.GetMapping(i) % 32;
-            bitDst[arrayIndex] |= (1 << offset);
-        }
+		for(unsigned int i = 0; i < eq.size(); i++)
+		{
+			unsigned int arrayIndex = mapping.GetMapping(i)/32;
+			unsigned int offset = mapping.GetMapping(i) % 32;
+			bitDst[arrayIndex] |= (1 << offset);
+		}
 
-        // Translate bit arrays to vector<bool> (also compact)
-        std::vector<bool> src_vec(dim);
-        for (unsigned int i = 0; i < dim; i++)
-            src_vec[i] = (bitSrc[i/32] & (1 << (i%32) )) != 0;
+		// Translate bit arrays to vector<bool> (also compact)
+		std::vector<bool> src_vec(dim);
+		for (unsigned int i = 0; i < dim; i++)
+			src_vec[i] = (bitSrc[i/32] & (1 << (i%32) )) != 0;
 
-        std::vector<bool> dst_vec(dim);
-        for (unsigned int i = 0; i < eq.size(); i++)
-            dst_vec[i] = (bitDst[i/32] & (1 << (i%32) )) != 0;
+		std::vector<bool> dst_vec(dim);
+		for (unsigned int i = 0; i < eq.size(); i++)
+			dst_vec[i] = (bitDst[i/32] & (1 << (i%32) )) != 0;
 
-        dbm2::DBM copy(dbm);
-        std::vector<int> table = copy.resize(src_vec, dst_vec);
+		dbm2::DBM copy(dbm);
+		std::vector<int> table = copy.resize(src_vec, dst_vec);
 
-        assert(dbm._bounds_table._number_of_clocks == dim);
-        assert(eq.size()+1 == copy._bounds_table._number_of_clocks);
+		assert(dbm._bounds_table._number_of_clocks == dim);
+		assert(eq.size()+1 == copy._bounds_table._number_of_clocks);
 
-        for(unsigned int i = 0; i < dim; ++i)
-        {
-            if(table[i] != i)
-            {
-                for(unsigned int j = 0; j < mapping.size(); ++j)
-                {
-                    if(mapping.GetMapping(j) == i)
-                        mapping.SetMapping(j, table[i]);
-                }
-            }
-        }
+		for(unsigned int i = 0; i < dim; ++i)
+		{
+			if(table[i] != i)
+			{
+				for(unsigned int j = 0; j < mapping.size(); ++j)
+				{
+					if(mapping.GetMapping(j) == i)
+						mapping.SetMapping(j, table[i]);
+				}
+			}
+		}
 
-        return copy;
-    }
+		return copy;
+	}
 
 	/*
 	 * Old version for comparison. This correctly projects DBM to all clocks
@@ -362,44 +368,44 @@ private:
 		return copy;
 	};
 
-    dbm2::DBM ProjectToAllClocksDbm2(const DiscretePart& dp, const TokenMapping& mapping, const dbm2::DBM& dbm) const
-    {
-        unsigned int dim = dbm._bounds_table._number_of_clocks;
-        unsigned int totalClocks = dp.size()+1;
-        std::vector<dbm2::dim_t> map(totalClocks);
-        map[0] = 0;
+	dbm2::DBM ProjectToAllClocksDbm2(const DiscretePart& dp, const TokenMapping& mapping, const dbm2::DBM& dbm) const
+	{
+		unsigned int dim = dbm._bounds_table._number_of_clocks;
+		unsigned int totalClocks = dp.size()+1;
+		std::vector<dbm2::dim_t> map(totalClocks);
+		map[0] = 0;
 
-        bool fromInc[totalClocks];
-        fromInc[0] = false;
-        for(unsigned int i = 1; i < totalClocks; i++)
-        {
-            unsigned int target = mapping.GetMapping(i-1);
-            if(target >= dim)
-            {
-                map[i] = ~0;
-                fromInc[i] = true;
-            }
-            else
-            {
-                map[i] = target;
-                fromInc[i] = false;
-            }
-        }
+		bool fromInc[totalClocks];
+		fromInc[0] = false;
+		for(unsigned int i = 1; i < totalClocks; i++)
+		{
+			unsigned int target = mapping.GetMapping(i-1);
+			if(target >= dim)
+			{
+				map[i] = ~0;
+				fromInc[i] = true;
+			}
+			else
+			{
+				map[i] = target;
+				fromInc[i] = false;
+			}
+		}
 
-        dbm2::DBM copy(dbm);
-        //copy.reorder(map, totalClocks);
+		dbm2::DBM copy(dbm);
+		//copy.reorder(map, totalClocks);
 
-        for(unsigned int i = 0; i < dp.size(); i++)
-        {
-            if(fromInc[i+1])
-            {
-                const TimedPlace& place = tapn->GetPlace(dp.GetTokenPlacement(i));
-                if(!place.IsUntimed()) copy.restrict(0, i+1, dbm2::bound_t(-place.GetMaxConstant(), true));
-            }
-        }
+		for(unsigned int i = 0; i < dp.size(); i++)
+		{
+			if(fromInc[i+1])
+			{
+				const TimedPlace& place = tapn->GetPlace(dp.GetTokenPlacement(i));
+				if(!place.IsUntimed()) copy.restrict(0, i+1, dbm2::bound_t(-place.GetMaxConstant(), true));
+			}
+		}
 
-        return copy;
-    };
+		return copy;
+	};
 
 	void MarkPlacesForInclusion(const std::vector<std::string>& places)
 	{

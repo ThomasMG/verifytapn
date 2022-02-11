@@ -17,9 +17,9 @@ class DiscretePartInclusionMarking : public StoredMarking {
 	friend class DiscreteInclusionMarkingFactory;
 public:
 	DiscretePartInclusionMarking(id_type id, const std::vector<int>& eq, const std::vector<int>& inc, const TokenMapping& mapping, const dbm::dbm_t& dbm) : eq(eq), inc(inc), mapping(mapping), dbm(dbm), new_dbm(dbm.getDimension()), id(id) { };
-    DiscretePartInclusionMarking(const DiscretePartInclusionMarking& dm) : eq(dm.eq), inc(dm.inc), mapping(dm.mapping), dbm(dm.dbm), new_dbm(dm.new_dbm), id(dm.id) { };
+	DiscretePartInclusionMarking(const DiscretePartInclusionMarking& dm) : eq(dm.eq), inc(dm.inc), mapping(dm.mapping), dbm(dm.dbm), new_dbm(dm.new_dbm), id(dm.id) { };
 
-    DiscretePartInclusionMarking(id_type id, const std::vector<int>& eq, const std::vector<int>& inc, const TokenMapping& mapping, const dbm::dbm_t& dbm, const dbm2::DBM new_dbm) : eq(eq), inc(inc), mapping(mapping), dbm(dbm), new_dbm(new_dbm), id(id) { };
+	DiscretePartInclusionMarking(id_type id, const std::vector<int>& eq, const std::vector<int>& inc, const TokenMapping& mapping, const dbm::dbm_t& dbm, const dbm2::DBM new_dbm) : eq(eq), inc(inc), mapping(mapping), dbm(dbm), new_dbm(new_dbm), id(id) { };
 
 	virtual ~DiscretePartInclusionMarking() { };
 
@@ -65,7 +65,7 @@ public:
 				result = SUBSET;
 			}
 		}
-        //TODO: do dmb2 relation stuff as well
+		//TODO: do dmb2 relation stuff as well
 		relation dbm_rel = ConvertToRelation(dbm.relation(other.dbm));
 
 		if(result == dbm_rel) return result;

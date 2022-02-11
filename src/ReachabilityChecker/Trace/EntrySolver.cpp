@@ -1,5 +1,6 @@
 #include "EntrySolver.hpp"
 #include "trace_exception.hpp"
+#include "../../EqualityChecker.h"
 
 namespace VerifyTAPN
 {
@@ -103,8 +104,9 @@ namespace VerifyTAPN
 
 				dbm2::bound_t bound2(inv.second.GetBound(), inv.second.IsBoundStrict());
 
-				auto constraint = AfterAction2(i, mapped_index+1, 0, bound2); //TODO: I hate this
+				auto constraint = AfterAction2(i, mapped_index+1, 0, bound2);
 				entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
+				EqualityChecker::assertEqualDbms(entryTimeDBM, entryTimeDBM2);
 			}
 		}
 
@@ -118,9 +120,11 @@ namespace VerifyTAPN
 			constraint_t bound(mapped_index+1, 0, dbm_boundbool2raw(inv.second.GetBound(), inv.second.IsBoundStrict()));
 			entryTimeDBM.constrain(AfterAction(dim, bound));
 
-            dbm2::bound_t bound2(inv.second.GetBound(), inv.second.IsBoundStrict());
-            auto constraint = AfterAction2(dim, mapped_index+1, 0, bound2); //TODO: So much
-            entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
+			dbm2::bound_t bound2(inv.second.GetBound(), inv.second.IsBoundStrict());
+			auto constraint = AfterAction2(dim, mapped_index+1, 0, bound2);
+			entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
+
+			EqualityChecker::assertEqualDbms(entryTimeDBM, entryTimeDBM2);
 		}
 
 
@@ -139,7 +143,7 @@ namespace VerifyTAPN
 				entryTimeDBM.constrain(entryLower);
 
 				auto constraint = AfterDelay2(i, 0, mapped_token_index + 1, interval.LowerBoundToDBM2Bound());
-                entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
+				entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
 
 				if(interval.UpperBoundToDBMRaw() != dbm_LS_INFINITY)
 				{
@@ -147,8 +151,8 @@ namespace VerifyTAPN
 					constraint_t entryUpper(AfterDelay(i, upper));
 					entryTimeDBM.constrain(entryUpper);
 
-                    constraint = AfterDelay2(i, mapped_token_index + 1, 0, interval.UpperBoundToDBM2Bound());
-                    entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
+					constraint = AfterDelay2(i, mapped_token_index + 1, 0, interval.UpperBoundToDBM2Bound());
+					entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
 				}
 			}
 
@@ -162,9 +166,11 @@ namespace VerifyTAPN
 				constraint_t bound(mapped_index+1, 0, dbm_boundbool2raw(inv.second.GetBound(), inv.second.IsBoundStrict()));
 				entryTimeDBM.constrain(AfterDelay(i, bound));
 
-                auto constraint = AfterDelay2(i, mapped_index + 1, 0, dbm2::bound_t(inv.second.GetBound(), inv.second.IsBoundStrict()));
-                entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
+				auto constraint = AfterDelay2(i, mapped_index + 1, 0, dbm2::bound_t(inv.second.GetBound(), inv.second.IsBoundStrict()));
+				entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
 			}
+
+			EqualityChecker::assertEqualDbms(entryTimeDBM, entryTimeDBM2);
 		}
 
 		// add constraints e_i - e_i+1 <= 0
@@ -174,33 +180,36 @@ namespace VerifyTAPN
 		}
 
 		if(entryTimeDBM.isEmpty()) throw VerifyTAPN::trace_exception("entry time dbm empty");
-        if(entryTimeDBM2.is_empty()) throw VerifyTAPN::trace_exception("entry time dbm empty");
+		if(entryTimeDBM2.is_empty()) throw VerifyTAPN::trace_exception("entry time dbm empty");
+
+		EqualityChecker::assertEqualDbms(entryTimeDBM, entryTimeDBM2);
 	}
 
-	//TODO: This is insane
+	//TODO: I need a structure to store two clock indexes and a bound_t
+	// implement such a structure perhaps, instead of this monster: pair<pair<int, int>, bound_t>.
 	std::pair<std::pair<dbm2::dim_t, dbm2::dim_t>, dbm2::bound_t>
 	EntrySolver::AfterAction2(unsigned int locationIndex, dbm2::dim_t i, dbm2::dim_t j, dbm2::bound_t constraint) const {
-        if(j == 0 && i != 0)
-            return std::make_pair(std::make_pair(locationIndex, LastResetAt(locationIndex, i)), constraint);
+		if(j == 0 && i != 0)
+			return std::make_pair(std::make_pair(locationIndex, LastResetAt(locationIndex, i)), constraint);
 
-        else
-        if(i == 0 && j != 0)
-            return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), locationIndex), constraint);
+		else
+		if(i == 0 && j != 0)
+			return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), locationIndex), constraint);
 
-        else
-            return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), LastResetAt(locationIndex, i)), constraint);
+		else
+			return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), LastResetAt(locationIndex, i)), constraint);
 	}
-    std::pair<std::pair<dbm2::dim_t, dbm2::dim_t>, dbm2::bound_t>
-    EntrySolver::AfterDelay2(unsigned int locationIndex, dbm2::dim_t i, dbm2::dim_t j, dbm2::bound_t constraint) const {
-        if(i != 0 && j == 0)
-            return std::make_pair(std::make_pair(locationIndex + 1, LastResetAt(locationIndex, i)), constraint);
+	std::pair<std::pair<dbm2::dim_t, dbm2::dim_t>, dbm2::bound_t>
+	EntrySolver::AfterDelay2(unsigned int locationIndex, dbm2::dim_t i, dbm2::dim_t j, dbm2::bound_t constraint) const {
+		if(i != 0 && j == 0)
+			return std::make_pair(std::make_pair(locationIndex + 1, LastResetAt(locationIndex, i)), constraint);
 
-        else
-        if(i == 0 && j != 0)
-            return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), locationIndex + 1), constraint);
+		else
+		if(i == 0 && j != 0)
+			return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), locationIndex + 1), constraint);
 
-        else
-            return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), LastResetAt(locationIndex, i)), constraint);
+		else
+			return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), LastResetAt(locationIndex, i)), constraint);
 	}
 
 	// Theory: AfterAction(Trace, index, guard/invariant)
@@ -257,28 +266,28 @@ namespace VerifyTAPN
 				assert(lower == decimal(entryTimeDBM2._bounds_table.at(0, i)._n));
 
 				bool upperStrict = dbm_rawIsStrict(entryTimeDBM(i, 0));
-                assert(upperStrict == entryTimeDBM2._bounds_table.at(i, 0)._strict);
+				assert(upperStrict == entryTimeDBM2._bounds_table.at(i, 0)._strict);
 
 				decimal upper = decimal(dbm_raw2bound(entryTimeDBM(i, 0)));
-                assert(upper == decimal(entryTimeDBM2._bounds_table.at(i, 0)._n));
+				assert(upper == decimal(entryTimeDBM2._bounds_table.at(i, 0)._n));
 				// try to derive tighter bounds
 				for(unsigned int j = 1;j < dim;j++){
 					if(restricted[j] && i != j){
 						bool strict = dbm_rawIsStrict(entryTimeDBM(i, j));
-                        assert(strict == entryTimeDBM2._bounds_table.at(i, j)._strict);
+						assert(strict == entryTimeDBM2._bounds_table.at(i, j)._strict);
 
 						decimal bound = decimal(dbm_raw2bound(entryTimeDBM(i, j))) + entry_times[j];
-                        assert(bound == decimal(entryTimeDBM2._bounds_table.at(i, j)._n));
+						assert(bound == decimal(entryTimeDBM2._bounds_table.at(i, j)._n));
 
 						if(bound < upper || (bound == upper && strict)){
 							upperStrict = strict;
 							upper = bound;
 						}
 						strict = dbm_rawIsStrict(entryTimeDBM(j, i));
-                        assert(strict == entryTimeDBM2._bounds_table.at(j, i)._strict);
+						assert(strict == entryTimeDBM2._bounds_table.at(j, i)._strict);
 
 						bound = decimal(-dbm_raw2bound(entryTimeDBM(j, i))) + entry_times[j];
-                        assert(bound == decimal(entryTimeDBM2._bounds_table.at(j, i)._n));
+						assert(bound == decimal(entryTimeDBM2._bounds_table.at(j, i)._n));
 
 						if(bound > lower || (bound == lower && strict)){
 							lowerStrict = strict;

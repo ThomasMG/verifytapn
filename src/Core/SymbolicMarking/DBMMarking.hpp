@@ -10,7 +10,7 @@
 #include <iosfwd>
 #include <vector>
 #include <dbm/print.h>
-#include "EqualityChecker.h"
+#include "../../EqualityChecker.h"
 
 #include <dbm2/DBM.h>
 
@@ -26,8 +26,8 @@ namespace VerifyTAPN {
 		DBMMarking(const DiscretePart& dp, const TokenMapping& mapping,  const dbm::dbm_t& dbm, const dbm2::DBM& new_dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(new_dbm), mapping(mapping) { assert(IsConsistent()); };
 		DBMMarking(const DBMMarking& dm) : DiscreteMarking(dm), dbm(dm.dbm), new_dbm(dm.new_dbm), mapping(dm.mapping) { };
 
-        DBMMarking(const DiscretePart& dp,  const dbm::dbm_t& dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(0), mapping() {InitMapping(); assert(IsConsistent()); };
-        DBMMarking(const DiscretePart& dp, const TokenMapping& mapping,  const dbm::dbm_t& dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(0), mapping(mapping) { assert(IsConsistent()); };
+		DBMMarking(const DiscretePart& dp,  const dbm::dbm_t& dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(0), mapping() {InitMapping(); assert(IsConsistent()); };
+		DBMMarking(const DiscretePart& dp, const TokenMapping& mapping,  const dbm::dbm_t& dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(0), mapping(mapping) { assert(IsConsistent()); };
 
 		virtual ~DBMMarking() { };
 
@@ -35,35 +35,35 @@ namespace VerifyTAPN {
 		virtual size_t HashKey() const { return VerifyTAPN::hash()(dp); };
 
 		virtual void Reset(int token) {
-		    dbm(mapping.GetMapping(token)) = 0;
-		    new_dbm.assign(mapping.GetMapping(token), 0);
+			dbm(mapping.GetMapping(token)) = 0;
+			new_dbm.assign(mapping.GetMapping(token), 0);
 
-		    EqualityChecker::assertEqualDbms(dbm, new_dbm);
+			EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 		virtual bool IsEmpty() const { return dbm.isEmpty(); };
-        virtual bool NewIsEmpty() const { return new_dbm.is_empty(); };
+		virtual bool NewIsEmpty() const { return new_dbm.is_empty(); };
 		virtual void Delay()
 		{
 			dbm.up();
-            new_dbm.future();
-            for(unsigned int i = 0; i < NumberOfTokens(); i++)
-            {
-                const TAPN::TimeInvariant& invariant = tapn->GetPlace(GetTokenPlacement(i)).GetInvariant();
-                Constrain(i, invariant);
-                assert(!IsEmpty()); // this should not be possible
-            }
-            EqualityChecker::assertEqualDbms(dbm, new_dbm);
-        };
+			new_dbm.future();
+			for(unsigned int i = 0; i < NumberOfTokens(); i++)
+			{
+				const TAPN::TimeInvariant& invariant = tapn->GetPlace(GetTokenPlacement(i)).GetInvariant();
+				Constrain(i, invariant);
+				assert(!IsEmpty()); // this should not be possible
+			}
+			EqualityChecker::assertEqualDbms(dbm, new_dbm);
+		};
 		virtual void Constrain(int token, const TAPN::TimeInterval& interval)
 		{
 			int clock = mapping.GetMapping(token);
 			dbm.constrain(0, clock, interval.LowerBoundToDBMRaw());
-            dbm.constrain(clock, 0, interval.UpperBoundToDBMRaw());
+			dbm.constrain(clock, 0, interval.UpperBoundToDBMRaw());
 
 			new_dbm.restrict(0,clock, interval.LowerBoundToDBM2Bound());
 			new_dbm.restrict(clock, 0, interval.UpperBoundToDBM2Bound());
 
-            EqualityChecker::assertEqualDbms(dbm, new_dbm);
+			EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 
 		virtual void Constrain(int token, const TAPN::TimeInvariant& invariant)
@@ -71,10 +71,10 @@ namespace VerifyTAPN {
 			if(invariant.GetBound() != std::numeric_limits<int>::max())
 			{
 				dbm.constrain(mapping.GetMapping(token), 0, dbm_boundbool2raw(invariant.GetBound(), invariant.IsBoundStrict()));
-                new_dbm.restrict(mapping.GetMapping(token), 0, dbm2::bound_t(invariant.GetBound(), invariant.IsBoundStrict()));
+				new_dbm.restrict(mapping.GetMapping(token), 0, dbm2::bound_t(invariant.GetBound(), invariant.IsBoundStrict()));
 			}
 
-            EqualityChecker::assertEqualDbms(dbm, new_dbm);
+			EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 
 		virtual bool PotentiallySatisfies(int token, const TAPN::TimeInterval& interval) const
@@ -100,15 +100,15 @@ namespace VerifyTAPN {
 		}
 
 		virtual void Extrapolate(const int* maxConstants) {
-		    dbm.diagonalExtrapolateMaxBounds(maxConstants);
+			dbm.diagonalExtrapolateMaxBounds(maxConstants);
 
-		    std::vector<dbm2::val_t> vec;
-		    for (int i = 0; i < new_dbm._bounds_table._number_of_clocks; i++)
-		        vec.push_back(maxConstants[i]);
-		    vec[0] = 0;
-		    new_dbm.diagonal_extrapolation(vec);
+			std::vector<dbm2::val_t> vec;
+			for (int i = 0; i < new_dbm._bounds_table._number_of_clocks; i++)
+				vec.push_back(maxConstants[i]);
+			vec[0] = 0;
+			new_dbm.diagonal_extrapolation(vec);
 
-            EqualityChecker::assertEqualDbms(dbm, new_dbm);
+			EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 		virtual unsigned int GetClockIndex(unsigned int token) const { return mapping.GetMapping(token); };
 
@@ -116,10 +116,10 @@ namespace VerifyTAPN {
 		virtual void RemoveTokens(const std::set<int>& tokenIndices);
 
 		raw_t GetLowerBound(int clock) const { return dbm(0,clock); };
-        dbm2::bound_t GetLowerBound2(int clock) const { return new_dbm._bounds_table.at(0,clock); };
+		dbm2::bound_t GetLowerBound2(int clock) const { return new_dbm._bounds_table.at(0,clock); };
 
 		const dbm::dbm_t& GetDBM() const { return dbm; };
-        const dbm2::DBM& GetDBM2() const { return new_dbm; };
+		const dbm2::DBM& GetDBM2() const { return new_dbm; };
 
 		virtual void Print(std::ostream& out) const;
 
@@ -132,8 +132,7 @@ namespace VerifyTAPN {
 			{
 				return false;
 			}
-            if(dp.size() != new_dbm._bounds_table._number_of_clocks - 1)
-                return false;
+			assert(dbm.getDimension() == new_dbm._bounds_table._number_of_clocks);
 
 			if(mapping.size() != dp.size()) return false;
 
@@ -142,8 +141,8 @@ namespace VerifyTAPN {
 				unsigned int mappedIndex = mapping.GetMapping(i);
 				if(mappedIndex == 0 || mappedIndex >= dbm.getDimension())
 					return false;
-                if(mappedIndex == 0 || mappedIndex >= new_dbm._bounds_table._number_of_clocks)
-                    return false;
+				if(mappedIndex == 0 || mappedIndex >= new_dbm._bounds_table._number_of_clocks)
+					return false;
 			}
 			return true;
 		};
@@ -154,7 +153,7 @@ namespace VerifyTAPN {
 		relation ConvertToRelation(relation_t relation) const;
 
 	protected: // data
-	    dbm::dbm_t dbm;
+		dbm::dbm_t dbm;
 		dbm2::DBM new_dbm;
 		TokenMapping mapping;
 		id_type id;

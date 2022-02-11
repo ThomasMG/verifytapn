@@ -1,9 +1,9 @@
-add_library(SymbolicMarking 
-	AbstractMarking.cpp  
-	DiscretePart.cpp                  
+add_library(SymbolicMarking
+	AbstractMarking.cpp
+	DiscretePart.cpp
 	StoredMarking.cpp
-	DBMMarking.cpp       
-	DiscretePartInclusionMarking.cpp  
+	DBMMarking.cpp
+	DiscretePartInclusionMarking.cpp
 	UppaalDBMMarkingFactory.cpp
 )
 
