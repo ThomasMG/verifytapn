@@ -11,6 +11,8 @@
 
 #include "../VerificationOptions.hpp"
 
+#include "EqualityChecker.h"
+
 namespace VerifyTAPN {
 
 class DiscreteInclusionMarkingFactory : public UppaalDBMMarkingFactory {
@@ -41,7 +43,9 @@ public:
 		dbm::dbm_t dbm = projectToEQPart(eq, mapping, dbmMarking->GetDBM());
         dbm2::DBM new_dbm = projectToEQPartDbm2(eq, mapping, dbmMarking->GetDBM2());
 
-		return new DiscretePartInclusionMarking(dbmMarking->id, eq, inc, mapping, dbm, new_dbm);
+        EqualityChecker::assertEqualDbms(dbm, new_dbm);
+
+        return new DiscretePartInclusionMarking(dbmMarking->id, eq, inc, mapping, dbm, new_dbm);
 	};
 
 	virtual SymbolicMarking* Convert(StoredMarking* marking) const
@@ -102,6 +106,9 @@ public:
 
 		DBMMarking* result =  new DBMMarking(dp, identity_mapping, dbm, new_dbm);
 		result->id = dpiMarking->id;
+
+        EqualityChecker::assertEqualDbms(dbm, new_dbm);
+
 		return result;
 	};
 

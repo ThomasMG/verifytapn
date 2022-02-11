@@ -65,6 +65,7 @@ namespace VerifyTAPN
 		}
 
 		assert(IsConsistent());
+        EqualityChecker::assertEqualDbms(dbm, new_dbm);
 	}
 
 	// Remove each token in tokensToRemove from the placement vector and from the DBM.
@@ -73,17 +74,14 @@ namespace VerifyTAPN
 	// the original dbm (bitSrc) and which are in the resulting DBM (bitDst).
 	void DBMMarking::RemoveTokens(const std::set<int>& tokenIndices)
 	{
-		std::vector<int> dbmTokensToRemove;
-		for(std::set<int>::const_iterator it = tokenIndices.begin(); it != tokenIndices.end(); it++)
-		{
-			dbmTokensToRemove.push_back(mapping.GetMapping(*it));
-		}
+        EqualityChecker::assertEqualDbms(dbm, new_dbm);
 
-		std::vector<int> orderedTokensToRemove = dbmTokensToRemove;
-		std::sort(orderedTokensToRemove.begin(), orderedTokensToRemove.end(), std::greater<int>());
+        std::vector<int> dbmTokensToRemove;
+        for (const auto &e : tokenIndices)
+			dbmTokensToRemove.push_back(mapping.GetMapping(e));
 
-        for (int i = 0; i < orderedTokensToRemove.size(); i++)
-            new_dbm._bounds_table.remove_clock(orderedTokensToRemove.at(i));
+        for (int i = 0; i < dbmTokensToRemove.size(); i++)
+            new_dbm._bounds_table.remove_clock(dbmTokensToRemove.at(i));
 
 		unsigned int oldDimension = dbm.getDimension();
 
@@ -149,6 +147,7 @@ namespace VerifyTAPN
 		}
 
 		assert(IsConsistent());
+        EqualityChecker::assertEqualDbms(dbm, new_dbm);
 	}
 
 	void DBMMarking::InitMapping()
@@ -200,6 +199,8 @@ namespace VerifyTAPN
 		DiscreteMarking::Swap(i,j);
 		dbm.swapClocks(mapping.GetMapping(i), mapping.GetMapping(j));
         new_dbm._bounds_table.swap_clocks(mapping.GetMapping(i), mapping.GetMapping(j));
+
+        EqualityChecker::assertEqualDbms(dbm, new_dbm);
 	}
 
 	void DBMMarking::Print(std::ostream& out) const

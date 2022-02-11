@@ -9,6 +9,8 @@
 #include <dbm/fed.h>
 #include <iosfwd>
 #include <vector>
+#include <dbm/print.h>
+#include "EqualityChecker.h"
 
 #include <dbm2/DBM.h>
 
@@ -35,6 +37,8 @@ namespace VerifyTAPN {
 		virtual void Reset(int token) {
 		    dbm(mapping.GetMapping(token)) = 0;
 		    new_dbm.assign(mapping.GetMapping(token), 0);
+
+		    EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 		virtual bool IsEmpty() const { return dbm.isEmpty(); };
         virtual bool NewIsEmpty() const { return new_dbm.is_empty(); };
@@ -48,6 +52,7 @@ namespace VerifyTAPN {
                 Constrain(i, invariant);
                 assert(!IsEmpty()); // this should not be possible
             }
+            EqualityChecker::assertEqualDbms(dbm, new_dbm);
         };
 		virtual void Constrain(int token, const TAPN::TimeInterval& interval)
 		{
@@ -57,6 +62,8 @@ namespace VerifyTAPN {
 
 			new_dbm.restrict(0,clock, interval.LowerBoundToDBM2Bound());
 			new_dbm.restrict(clock, 0, interval.UpperBoundToDBM2Bound());
+
+            EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 
 		virtual void Constrain(int token, const TAPN::TimeInvariant& invariant)
@@ -66,6 +73,8 @@ namespace VerifyTAPN {
 				dbm.constrain(mapping.GetMapping(token), 0, dbm_boundbool2raw(invariant.GetBound(), invariant.IsBoundStrict()));
                 new_dbm.restrict(mapping.GetMapping(token), 0, dbm2::bound_t(invariant.GetBound(), invariant.IsBoundStrict()));
 			}
+
+            EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 
 		virtual bool PotentiallySatisfies(int token, const TAPN::TimeInterval& interval) const
@@ -93,12 +102,13 @@ namespace VerifyTAPN {
 		virtual void Extrapolate(const int* maxConstants) {
 		    dbm.diagonalExtrapolateMaxBounds(maxConstants);
 
-		    //TODO: I'm gonna (probably wrongfully) assume that this is the same as a regular delay and normalisation
-		    new_dbm.future();
 		    std::vector<dbm2::val_t> vec;
 		    for (int i = 0; i < new_dbm._bounds_table._number_of_clocks; i++)
-		        vec.push_back((dbm2::val_t) maxConstants[i]);
-		    new_dbm.norm(vec);
+		        vec.push_back(maxConstants[i]);
+		    vec[0] = 0;
+		    new_dbm.diagonal_extrapolation(vec);
+
+            EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
 		virtual unsigned int GetClockIndex(unsigned int token) const { return mapping.GetMapping(token); };
 
@@ -112,6 +122,7 @@ namespace VerifyTAPN {
         const dbm2::DBM& GetDBM2() const { return new_dbm; };
 
 		virtual void Print(std::ostream& out) const;
+
 	private:
 		void InitMapping();
 
