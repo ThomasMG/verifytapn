@@ -43,6 +43,7 @@ namespace VerifyTAPN
 
 		dbm.resize(bitSrc, bitDst, bitArraySize, table);
 
+		//TODO: Use add_clock instead
 		dbm2::DBM resized_new_dbm(newDimension);
 		for (int i = 0; i < oldDimension; i++)
 			for (int j = 0; j < oldDimension; j++)
