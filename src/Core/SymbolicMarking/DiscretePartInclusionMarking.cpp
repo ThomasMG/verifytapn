@@ -1,6 +1,5 @@
 #include "DiscretePartInclusionMarking.hpp"
 #include <iostream>
-#include "dbm/print.h"
 
 namespace VerifyTAPN
 {
@@ -25,8 +24,6 @@ namespace VerifyTAPN
 		}
 		out << std::endl;
 		out << "DBM:" << std::endl;
-		out << dbm;
-		out << "DBM2:" << std::endl;
 		out << new_dbm;
 		out << "FIXME:" << std::endl;
 	}

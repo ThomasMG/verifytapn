@@ -7,7 +7,6 @@
 #include <algorithm>
 #include "TokenMapping.hpp"
 #include "../../typedefs.hpp"
-#include <dbm/fed.h>
 #include <iosfwd>
 #include <pardibaal/DBM.h>
 
@@ -16,10 +15,9 @@ namespace VerifyTAPN {
 class DiscretePartInclusionMarking : public StoredMarking {
 	friend class DiscreteInclusionMarkingFactory;
 public:
-	DiscretePartInclusionMarking(id_type id, const std::vector<int>& eq, const std::vector<int>& inc, const TokenMapping& mapping, const dbm::dbm_t& dbm) : eq(eq), inc(inc), mapping(mapping), dbm(dbm), new_dbm(dbm.getDimension()), id(id) { };
-	DiscretePartInclusionMarking(const DiscretePartInclusionMarking& dm) : eq(dm.eq), inc(dm.inc), mapping(dm.mapping), dbm(dm.dbm), new_dbm(dm.new_dbm), id(dm.id) { };
+	DiscretePartInclusionMarking(const DiscretePartInclusionMarking& dm) : eq(dm.eq), inc(dm.inc), mapping(dm.mapping), new_dbm(dm.new_dbm), id(dm.id) { };
 
-	DiscretePartInclusionMarking(id_type id, const std::vector<int>& eq, const std::vector<int>& inc, const TokenMapping& mapping, const dbm::dbm_t& dbm, const pardibaal::DBM new_dbm) : eq(eq), inc(inc), mapping(mapping), dbm(dbm), new_dbm(new_dbm), id(id) { };
+	DiscretePartInclusionMarking(id_type id, const std::vector<int>& eq, const std::vector<int>& inc, const TokenMapping& mapping, const pardibaal::DBM new_dbm) : eq(eq), inc(inc), mapping(mapping), new_dbm(new_dbm), id(id) { };
 
 	virtual ~DiscretePartInclusionMarking() { };
 
@@ -66,12 +64,13 @@ public:
 			}
 		}
 		//TODO: do dmb2 relation stuff as well
-		relation dbm_rel = ConvertToRelation(dbm.relation(other.dbm));
+		auto dbm_rel = new_dbm.relation(other.new_dbm);
+		relation rel = dbm_rel.is_equal() ? EQUAL : dbm_rel.is_subset() ? SUBSET : dbm_rel.is_superset() ? SUPERSET : DIFFERENT;
 
-		if(result == dbm_rel) return result;
-		if(result == EQUAL) return dbm_rel;
-		if(result == SUBSET && dbm_rel == EQUAL) return SUBSET;
-		if(result == SUPERSET && dbm_rel == EQUAL) return SUPERSET;
+		if(result == rel) return result;
+		if(result == EQUAL) return rel;
+		if(result == SUBSET && rel == EQUAL) return SUBSET;
+		if(result == SUPERSET && rel == EQUAL) return SUPERSET;
 
 		return DIFFERENT;
 	}
@@ -94,22 +93,15 @@ public:
 
 	virtual const std::vector<int>& inclusionTokens() const { return inc; };
 private:
-	relation ConvertToRelation(relation_t relation) const
+	relation ConvertToRelation(pardibaal::relation_t rel) const
 	{
-		switch(relation)
-		{
-		case base_SUPERSET: return SUPERSET;
-		case base_SUBSET: return SUBSET;
-		case base_EQUAL: return EQUAL;
-		default: return DIFFERENT;
-		}
+		return rel.is_equal() ? EQUAL : rel.is_subset() ? SUBSET : rel.is_superset() ? SUPERSET : DIFFERENT;
 	}
 
 private:
 	std::vector<int> eq;
 	std::vector<int> inc;
 	TokenMapping mapping;
-	dbm::dbm_t dbm;
 	pardibaal::DBM new_dbm;
 	id_type id;
 };

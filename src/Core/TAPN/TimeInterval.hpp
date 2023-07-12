@@ -3,7 +3,6 @@
 
 #include <limits>
 #include <iostream>
-#include <dbm/constraints.h>
 #include <pardibaal/bound_t.h>
 
 namespace VerifyTAPN {
@@ -37,10 +36,6 @@ namespace VerifyTAPN {
 			{
 			    return pardibaal::bound_t(-lowerBound, leftStrict);
 			};
-			inline raw_t LowerBoundToDBMRaw() const
-			{
-				return dbm_bound2raw(-lowerBound, leftStrict ? dbm_STRICT : dbm_WEAK);
-			};
 
             inline pardibaal::bound_t UpperBoundToDBM2Bound() const
             {
@@ -53,17 +48,6 @@ namespace VerifyTAPN {
                     return pardibaal::bound_t(upperBound, rightStrict);
                 }
             };
-			inline raw_t UpperBoundToDBMRaw() const
-			{
-				if(upperBound == std::numeric_limits<int>().max())
-				{
-					return dbm_LS_INFINITY;
-				}
-				else
-				{
-					return dbm_bound2raw(upperBound, rightStrict ? dbm_STRICT : dbm_WEAK);
-				}
-			};
 
 			inline const bool IsZeroInfinity() const { return !leftStrict && lowerBound == 0 && upperBound == std::numeric_limits<int>().max() && rightStrict; }
 

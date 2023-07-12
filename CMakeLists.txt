@@ -79,22 +79,6 @@ if (VERIFYTAPN_GetDependencies)
 		INSTALL_COMMAND cd ../rapidxml-ext && ${CMAKE_COMMAND} -E copy rapidxml.hpp rapidxml_iterators.hpp rapidxml_print.hpp rapidxml_utils.hpp ${EXTERNAL_INSTALL_LOCATION}/include
 	)
 
-	#set(cflag-dbm "-DDISABLE_ASSERTX -DENABLE_64BIT -DCMAKE_TOOLCHAIN_FILE")
-	ExternalProject_add(udbm-ext
-		URL https://github.com/UPPAALModelChecker/UDBM/archive/refs/tags/v2.0.10.zip
-		URL_HASH SHA512=62ae6b8be8b3f1c42f8c2690d488ad1ad48cacaa31a444e6c77192734701ae42c38448ba1fb1f8199d2e67ead8c9a6acb91c92b3b37b5b40589b74c588c0a5e7
-		CMAKE_ARGS(
-			-DCMAKE_PREFIX_PATH=${EXTERNAL_INSTALL_LOCATION}
-			-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-			-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-			-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-   		)
-		INSTALL_COMMAND mkdir -p ${EXTERNAL_INSTALL_LOCATION}/include &&
-			${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include ${EXTERNAL_INSTALL_LOCATION}/include &&
-			mkdir -p ${EXTERNAL_INSTALL_LOCATION}/lib &&
-			${CMAKE_COMMAND} -E copy_directory <BINARY_DIR>/udbm/lib ${EXTERNAL_INSTALL_LOCATION}/lib
-	)
-
 	ExternalProject_add(pardibaal-ext
 		GIT_REPOSITORY git@github.com:DEIS-Tools/PARDIBAAL.git
 		GIT_TAG main

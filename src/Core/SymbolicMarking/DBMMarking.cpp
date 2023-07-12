@@ -1,6 +1,5 @@
 #include "DBMMarking.hpp"
 #include <iostream>
-#include "dbm/print.h"
 
 namespace VerifyTAPN
 {
@@ -14,7 +13,7 @@ namespace VerifyTAPN
 	{
 		unsigned int tokens = NumberOfTokens();
 		unsigned int nAdditionalTokens = placeIndices.size();
-		unsigned int oldDimension = dbm.getDimension();
+		unsigned int oldDimension = new_dbm.dimension();
 		unsigned int newDimension = oldDimension + nAdditionalTokens;
 
 		unsigned int bitArraySize = (newDimension % 32 == 0 ? newDimension/32 : newDimension/32+1);
@@ -41,8 +40,6 @@ namespace VerifyTAPN
 			bitDst[bitArraySize-1] ^= ~((1 << newDimension % 32)-1);
 		}
 
-		dbm.resize(bitSrc, bitDst, bitArraySize, table);
-
 		//TODO: Use add_clock instead
 		pardibaal::DBM resized_new_dbm(newDimension);
 		for (int i = 0; i < oldDimension; i++)
@@ -59,14 +56,13 @@ namespace VerifyTAPN
 		unsigned int newTokenIndex = tokens;
 		for(std::list<int>::const_iterator iter = placeIndices.begin(); iter != placeIndices.end(); ++iter)
 		{
-			dbm(oldDimension+i) = 0; // reset new clocks to zero
+			// dbm(oldDimension+i) = 0; // reset new clocks to zero
 			mapping.SetMapping(newTokenIndex, oldDimension+i);
 			dp.AddTokenInPlace(*iter);
 			i++;newTokenIndex++;
 		}
 
 		assert(IsConsistent());
-		EqualityChecker::assertEqualDbms(dbm, new_dbm);
 	}
 
 	// Remove each token in tokensToRemove from the placement vector and from the DBM.
@@ -75,57 +71,24 @@ namespace VerifyTAPN
 	// the original dbm (bitSrc) and which are in the resulting DBM (bitDst).
 	void DBMMarking::RemoveTokens(const std::set<int>& tokenIndices)
 	{
-		EqualityChecker::assertEqualDbms(dbm, new_dbm);
-
 		std::vector<int> dbmTokensToRemove;
 		for (const auto &e : tokenIndices)
 			dbmTokensToRemove.push_back(mapping.GetMapping(e));
 
+		unsigned int oldDimension = new_dbm.dimension();
+
 		for (int i = 0; i < dbmTokensToRemove.size(); i++)
 			new_dbm.remove_clock(dbmTokensToRemove.at(i));
 
-		unsigned int oldDimension = dbm.getDimension();
 
 		assert(oldDimension-dbmTokensToRemove.size() > 0); // should at least be the zero clock left in the DBM
 
-		unsigned int bitArraySize = (oldDimension % 32 == 0 ? oldDimension/32 : oldDimension/32+1);
-
-		unsigned int bitSrc[bitArraySize];
-		unsigned int bitDstMask[bitArraySize];
-		unsigned int bitDst[bitArraySize];
 		unsigned int table[oldDimension];
-
-		// setup the bitvectors
-		for(unsigned int i = 0; i < bitArraySize; ++i)
-		{
-			bitSrc[i] = ~(bitSrc[i] & 0);
-			bitDst[i] = ~(bitDst[i] & 0);
-			bitDstMask[i] = 0;
-		}
-
-		if(oldDimension%32 != 0)
-		{
-			bitSrc[bitArraySize-1] ^= ~((1 << oldDimension % 32)-1);
-			bitDst[bitArraySize-1] ^= ~((1 << oldDimension % 32)-1);
-		}
-
-
-		for(unsigned int i = 0; i < dbmTokensToRemove.size(); ++i)
-		{
-			bitDstMask[dbmTokensToRemove[i]/32] |= (1 << dbmTokensToRemove[i] % 32);
-		}
-
-		for(unsigned int i = 0; i < bitArraySize; ++i)
-		{
-			bitDst[i] ^= bitDstMask[i];
-		}
 
 		for(unsigned int i = 0; i < oldDimension; ++i)
 		{
 			table[i] = std::numeric_limits<unsigned int>().max();
 		}
-
-		dbm.resize(bitSrc,bitDst,bitArraySize, table);
 
 		// fix token mapping according to new DBM:
 		for(unsigned int i = 0; i < oldDimension; ++i)
@@ -148,7 +111,6 @@ namespace VerifyTAPN
 		}
 
 		assert(IsConsistent());
-		EqualityChecker::assertEqualDbms(dbm, new_dbm);
 	}
 
 	void DBMMarking::InitMapping()
@@ -159,15 +121,9 @@ namespace VerifyTAPN
 		}
 	}
 
-	relation DBMMarking::ConvertToRelation(relation_t relation) const
+	relation DBMMarking::ConvertToRelation(pardibaal::relation_t rel) const
 	{
-		switch(relation)
-		{
-		case base_SUPERSET: return SUPERSET;
-		case base_SUBSET: return SUBSET;
-		case base_EQUAL: return EQUAL;
-		default: return DIFFERENT;
-		}
+		return rel.is_equal() ? EQUAL : rel.is_subset() ? SUBSET : rel.is_superset() ? SUPERSET : DIFFERENT;
 	}
 
 	bool DBMMarking::IsUpperPositionGreaterThanPivot(int upper, int pivotIndex) const
@@ -180,17 +136,10 @@ namespace VerifyTAPN
 			std::cout << "*";
 		}
 
-		bool new_rtn = DiscreteMarking::IsUpperPositionGreaterThanPivot(upper, pivotIndex)
+		bool rtn = DiscreteMarking::IsUpperPositionGreaterThanPivot(upper, pivotIndex)
 			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) >  new_dbm.at(0,mapPivot))
 			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) == new_dbm.at(0,mapPivot) && new_dbm.at(mapUpper,0) > new_dbm.at(mapPivot,0))
 			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) == new_dbm.at(0,mapPivot) && new_dbm.at(mapUpper,0) == new_dbm.at(mapPivot,0) && (mapPivot > mapUpper ? new_dbm.at(mapPivot,mapUpper) > new_dbm.at(mapUpper,mapPivot) : new_dbm.at(mapUpper,mapPivot) > new_dbm.at(mapPivot,mapUpper)));
-
-		bool rtn = DiscreteMarking::IsUpperPositionGreaterThanPivot(upper, pivotIndex)
-				   || (placeUpper == pivot && dbm(0,mapUpper) >  dbm(0,mapPivot))
-				   || (placeUpper == pivot && dbm(0,mapUpper) == dbm(0,mapPivot) && dbm(mapUpper,0) > dbm(mapPivot,0))
-				   || (placeUpper == pivot && dbm(0,mapUpper) == dbm(0,mapPivot) && dbm(mapUpper,0) == dbm(mapPivot,0) && (mapPivot > mapUpper ? dbm(mapPivot,mapUpper) > dbm(mapUpper,mapPivot) : dbm(mapUpper,mapPivot) > dbm(mapPivot,mapUpper)));
-
-		assert(new_rtn == rtn);
 
 		return rtn;
 	}
@@ -198,10 +147,7 @@ namespace VerifyTAPN
 	void DBMMarking::Swap(int i, int j)
 	{
 		DiscreteMarking::Swap(i,j);
-		dbm.swapClocks(mapping.GetMapping(i), mapping.GetMapping(j));
 		new_dbm.swap_clocks(mapping.GetMapping(i), mapping.GetMapping(j));
-
-		EqualityChecker::assertEqualDbms(dbm, new_dbm);
 	}
 
 	void DBMMarking::Print(std::ostream& out) const
@@ -219,8 +165,6 @@ namespace VerifyTAPN
 		}
 		out << std::endl;
 		out << "DBM:" << std::endl;
-		out << dbm;
-		out << "New_DBM" << std::endl;
 		out << new_dbm;
 		out << "FIXME" << std::endl;
 	};

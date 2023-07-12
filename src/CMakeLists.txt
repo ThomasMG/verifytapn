@@ -6,7 +6,7 @@ add_executable(verifytapn-${ARCH_TYPE} main.cpp)
 target_link_libraries(verifytapn-${ARCH_TYPE} PRIVATE
 	Core 
 	ReachabilityChecker
-		-lpardibaal -ldbm -lbase -ludebug -lhash
+		-lpardibaal
 )
 
 add_dependencies(verifytapn-${ARCH_TYPE} pardibaal-ext)

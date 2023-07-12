@@ -3,7 +3,6 @@
 
 #include "MarkingFactory.hpp"
 #include "DBMMarking.hpp"
-#include "dbm/print.h"
 
 namespace VerifyTAPN {
 
@@ -19,10 +18,8 @@ namespace VerifyTAPN {
 
 		virtual SymbolicMarking* InitialMarking(const std::vector<int>& tokenPlacement) const
 		{
-			dbm::dbm_t dbm(tokenPlacement.size()+1);
-			dbm.setZero();
 			pardibaal::DBM new_dbm(tokenPlacement.size()+1);
-			DBMMarking* marking = new DBMMarking(DiscretePart(tokenPlacement), dbm, new_dbm);
+			DBMMarking* marking = new DBMMarking(DiscretePart(tokenPlacement), new_dbm);
 			marking->id = 0;
 			return marking;
 		};
