@@ -97,7 +97,7 @@ if (VERIFYTAPN_GetDependencies)
 
 	ExternalProject_add(pardibaal-ext
 		GIT_REPOSITORY git@github.com:DEIS-Tools/PARDIBAAL.git
-		GIT_TAG main
+		GIT_TAG extrapolation_fix
 		CMAKE_ARGS -DCMAKE_PREFIX_PATH=${EXTERNAL_INSTALL_LOCATION}
 				   -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} 
 				   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} 
