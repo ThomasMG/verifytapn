@@ -7,7 +7,7 @@
 #include "dbm/print.h"
 #include <iostream>
 
-#include <dbm2/DBM.h>
+#include <pardibaal/DBM.h>
 
 #include "../VerificationOptions.hpp"
 
@@ -41,7 +41,7 @@ public:
 			}
 		}
 		dbm::dbm_t dbm = projectToEQPart(eq, mapping, dbmMarking->GetDBM());
-		dbm2::DBM new_dbm = projectToEQPartDbm2(eq, mapping, dbmMarking->GetDBM2());
+		pardibaal::DBM new_dbm = projectToEQPartDbm2(eq, mapping, dbmMarking->GetDBM2());
 
 		EqualityChecker::assertEqualDbms(dbm, new_dbm);
 
@@ -93,7 +93,7 @@ public:
 		DiscretePart dp(dpVec);
 		dbm::dbm_t dbm = ProjectToAllClocks2(dp,mapping, dpiMarking->dbm); // improved speed
 		//dbm::dbm_t dbm = ProjectToAllClocks(dp, mapping, dpiMarking->dbm); // old correct for comparison
-		dbm2::DBM new_dbm = ProjectToAllClocksDbm2(dp, mapping, dpiMarking->new_dbm);
+		pardibaal::DBM new_dbm = ProjectToAllClocksDbm2(dp, mapping, dpiMarking->new_dbm);
 
 		TokenMapping identity_mapping;
 		for(unsigned int i = 0; i < dp.size(); i++)
@@ -102,7 +102,7 @@ public:
 		}
 
 		assert(dp.size()+1 == dbm.getDimension());
-		assert(dp.size()+1 == new_dbm._bounds_table._number_of_clocks);
+		assert(dp.size()+1 == new_dbm.dimension());
 
 		DBMMarking* result =  new DBMMarking(dp, identity_mapping, dbm, new_dbm);
 		result->id = dpiMarking->id;
@@ -137,14 +137,14 @@ private:
 		if(place.HasInhibitorArcs()) return false;
 		if(place.IsUntimed()) return true;
 
-		dbm2::bound_t lowerBound2 = marking.GetLowerBound2(marking.GetClockIndex(token));
+		pardibaal::bound_t lowerBound2 = marking.GetLowerBound2(marking.GetClockIndex(token));
 		raw_t lowerBound = marking.GetLowerBound(marking.GetClockIndex(token));
 
-		assert(dbm_raw2bound(lowerBound) == lowerBound2._n);
-		assert((dbm_raw2strict(lowerBound) == strictness_t::dbm_STRICT && lowerBound2._strict) ||
-		       (dbm_raw2strict(lowerBound) == strictness_t::dbm_WEAK && !lowerBound2._strict));
+		assert(dbm_raw2bound(lowerBound) == lowerBound2.get_bound());
+		assert((dbm_raw2strict(lowerBound) == strictness_t::dbm_STRICT && lowerBound2.is_strict()) ||
+		       (dbm_raw2strict(lowerBound) == strictness_t::dbm_WEAK && !lowerBound2.is_strict()));
 
-		if(lowerBound2 == dbm2::bound_t(-place.GetMaxConstant(), true)) return true;
+		if(lowerBound2 == pardibaal::bound_t(-place.GetMaxConstant(), true)) return true;
 //		if(lowerBound == dbm_bound2raw(-place.GetMaxConstant(), dbm_STRICT)) return true; // TODO: check that == is correct
 
 
@@ -205,10 +205,10 @@ private:
 		return copy;
 	};
 
-	dbm2::DBM projectToEQPartDbm2(const std::vector<int>& eq, TokenMapping& mapping, const dbm2::DBM& dbm) const
+	pardibaal::DBM projectToEQPartDbm2(const std::vector<int>& eq, TokenMapping& mapping, const pardibaal::DBM& dbm) const
 	{
-		unsigned int dim = dbm._bounds_table._number_of_clocks;
-		if(eq.size()+1 == dim) return dbm2::DBM(dbm);
+		unsigned int dim = dbm.dimension();
+		if(eq.size()+1 == dim) return pardibaal::DBM(dbm);
 
 		unsigned int bitArraySize = (dim % 32 == 0 ? dim/32 : dim/32+1);
 		unsigned int bitSrc[bitArraySize];
@@ -246,11 +246,11 @@ private:
 		for (unsigned int i = 0; i < eq.size(); i++)
 			dst_vec[i] = (bitDst[i/32] & (1 << (i%32) )) != 0;
 
-		dbm2::DBM copy(dbm);
-		std::vector<int> table = copy.resize(src_vec, dst_vec);
+		pardibaal::DBM copy(dbm);
+		std::vector<pardibaal::dim_t> table = copy.resize(src_vec, dst_vec);
 
-		assert(dbm._bounds_table._number_of_clocks == dim);
-		assert(eq.size()+1 == copy._bounds_table._number_of_clocks);
+		assert(dbm.dimension() == dim);
+		assert(eq.size()+1 == copy.dimension());
 
 		for(unsigned int i = 0; i < dim; ++i)
 		{
@@ -368,11 +368,11 @@ private:
 		return copy;
 	};
 
-	dbm2::DBM ProjectToAllClocksDbm2(const DiscretePart& dp, const TokenMapping& mapping, const dbm2::DBM& dbm) const
+	pardibaal::DBM ProjectToAllClocksDbm2(const DiscretePart& dp, const TokenMapping& mapping, const pardibaal::DBM& dbm) const
 	{
-		unsigned int dim = dbm._bounds_table._number_of_clocks;
+		unsigned int dim = dbm.dimension();
 		unsigned int totalClocks = dp.size()+1;
-		std::vector<dbm2::dim_t> map(totalClocks);
+		std::vector<pardibaal::dim_t> map(totalClocks);
 		map[0] = 0;
 
 		bool fromInc[totalClocks];
@@ -392,7 +392,7 @@ private:
 			}
 		}
 
-		dbm2::DBM copy(dbm);
+		pardibaal::DBM copy(dbm);
 		//copy.reorder(map, totalClocks);
 
 		for(unsigned int i = 0; i < dp.size(); i++)
@@ -400,7 +400,7 @@ private:
 			if(fromInc[i+1])
 			{
 				const TimedPlace& place = tapn->GetPlace(dp.GetTokenPlacement(i));
-				if(!place.IsUntimed()) copy.restrict(0, i+1, dbm2::bound_t(-place.GetMaxConstant(), true));
+				if(!place.IsUntimed()) copy.restrict(0, i+1, pardibaal::bound_t(-place.GetMaxConstant(), true));
 			}
 		}
 

@@ -6,7 +6,7 @@
 #include <vector>
 #include "../../typedefs.hpp"
 #include <dbm/fed.h>
-#include <dbm2/DBM.h>
+#include <pardibaal/DBM.h>
 
 namespace VerifyTAPN
 {
@@ -28,13 +28,13 @@ namespace VerifyTAPN
 
 		constraint_t AfterAction(unsigned int locationIndex, const constraint_t& constraint) const;
 
-		std::pair<std::pair<dbm2::dim_t, dbm2::dim_t>, dbm2::bound_t>
-		AfterAction2(unsigned int locationIndex, dbm2::dim_t i, dbm2::dim_t j, dbm2::bound_t constraint) const;
+		std::pair<std::pair<pardibaal::dim_t, pardibaal::dim_t>, pardibaal::bound_t>
+		AfterAction2(unsigned int locationIndex, pardibaal::dim_t i, pardibaal::dim_t j, pardibaal::bound_t constraint) const;
 
 		constraint_t AfterDelay(unsigned int locationIndex, const constraint_t& constraint) const;
 
-		std::pair<std::pair<dbm2::dim_t, dbm2::dim_t>, dbm2::bound_t>
-		AfterDelay2(unsigned int locationIndex, dbm2::dim_t i, dbm2::dim_t j, dbm2::bound_t constraint) const;
+		std::pair<std::pair<pardibaal::dim_t, pardibaal::dim_t>, pardibaal::bound_t>
+		AfterDelay2(unsigned int locationIndex, pardibaal::dim_t i, pardibaal::dim_t j, pardibaal::bound_t constraint) const;
 
 		decimal FindValueInRange(bool lowerStrict, decimal lower, decimal upper, bool upperStrict, decimal lastEntryTime) const;
 		void ConvertEntryTimesToDelays(const std::vector<decimal>& entry_times, std::vector<decimal>& delays) const;
@@ -42,7 +42,7 @@ namespace VerifyTAPN
 	private:
 		unsigned int* lraTable;
 		dbm::dbm_t entryTimeDBM;
-		dbm2::DBM entryTimeDBM2;
+		pardibaal::DBM entryTimeDBM2;
 
 		unsigned int clocks;
 		const std::deque<TraceInfo>& traceInfos;

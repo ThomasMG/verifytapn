@@ -102,7 +102,7 @@ namespace VerifyTAPN
 				constraint_t bound(mapped_index+1, 0, dbm_boundbool2raw(inv.second.GetBound(), inv.second.IsBoundStrict()));
 				entryTimeDBM.constrain(AfterAction(i, bound));
 
-				dbm2::bound_t bound2(inv.second.GetBound(), inv.second.IsBoundStrict());
+				pardibaal::bound_t bound2(inv.second.GetBound(), inv.second.IsBoundStrict());
 
 				auto constraint = AfterAction2(i, mapped_index+1, 0, bound2);
 				entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
@@ -120,7 +120,7 @@ namespace VerifyTAPN
 			constraint_t bound(mapped_index+1, 0, dbm_boundbool2raw(inv.second.GetBound(), inv.second.IsBoundStrict()));
 			entryTimeDBM.constrain(AfterAction(dim, bound));
 
-			dbm2::bound_t bound2(inv.second.GetBound(), inv.second.IsBoundStrict());
+			pardibaal::bound_t bound2(inv.second.GetBound(), inv.second.IsBoundStrict());
 			auto constraint = AfterAction2(dim, mapped_index+1, 0, bound2);
 			entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
 
@@ -166,7 +166,7 @@ namespace VerifyTAPN
 				constraint_t bound(mapped_index+1, 0, dbm_boundbool2raw(inv.second.GetBound(), inv.second.IsBoundStrict()));
 				entryTimeDBM.constrain(AfterDelay(i, bound));
 
-				auto constraint = AfterDelay2(i, mapped_index + 1, 0, dbm2::bound_t(inv.second.GetBound(), inv.second.IsBoundStrict()));
+				auto constraint = AfterDelay2(i, mapped_index + 1, 0, pardibaal::bound_t(inv.second.GetBound(), inv.second.IsBoundStrict()));
 				entryTimeDBM2.restrict(constraint.first.first, constraint.first.second, constraint.second);
 			}
 
@@ -176,7 +176,7 @@ namespace VerifyTAPN
 		// add constraints e_i - e_i+1 <= 0
 		for(unsigned int i = 0;i < dim;i++){
 			entryTimeDBM.constrain(i, i + 1, 0, false);
-			entryTimeDBM2.restrict(i, i + 1, dbm2::bound_t(0, false));
+			entryTimeDBM2.restrict(i, i + 1, pardibaal::bound_t(0, false));
 		}
 
 		if(entryTimeDBM.isEmpty()) throw VerifyTAPN::trace_exception("entry time dbm empty");
@@ -187,8 +187,8 @@ namespace VerifyTAPN
 
 	//TODO: I need a structure to store two clock indexes and a bound_t
 	// implement such a structure perhaps, instead of this monster: pair<pair<int, int>, bound_t>.
-	std::pair<std::pair<dbm2::dim_t, dbm2::dim_t>, dbm2::bound_t>
-	EntrySolver::AfterAction2(unsigned int locationIndex, dbm2::dim_t i, dbm2::dim_t j, dbm2::bound_t constraint) const {
+	std::pair<std::pair<pardibaal::dim_t, pardibaal::dim_t>, pardibaal::bound_t>
+	EntrySolver::AfterAction2(unsigned int locationIndex, pardibaal::dim_t i, pardibaal::dim_t j, pardibaal::bound_t constraint) const {
 		if(j == 0 && i != 0)
 			return std::make_pair(std::make_pair(locationIndex, LastResetAt(locationIndex, i)), constraint);
 
@@ -199,8 +199,8 @@ namespace VerifyTAPN
 		else
 			return std::make_pair(std::make_pair(LastResetAt(locationIndex, j), LastResetAt(locationIndex, i)), constraint);
 	}
-	std::pair<std::pair<dbm2::dim_t, dbm2::dim_t>, dbm2::bound_t>
-	EntrySolver::AfterDelay2(unsigned int locationIndex, dbm2::dim_t i, dbm2::dim_t j, dbm2::bound_t constraint) const {
+	std::pair<std::pair<pardibaal::dim_t, pardibaal::dim_t>, pardibaal::bound_t>
+	EntrySolver::AfterDelay2(unsigned int locationIndex, pardibaal::dim_t i, pardibaal::dim_t j, pardibaal::bound_t constraint) const {
 		if(i != 0 && j == 0)
 			return std::make_pair(std::make_pair(locationIndex + 1, LastResetAt(locationIndex, i)), constraint);
 
@@ -248,7 +248,7 @@ namespace VerifyTAPN
 		assert(!entryTimeDBM.isEmpty());
 		assert(!entryTimeDBM2.is_empty());
 		unsigned int dim = entryTimeDBM.getDimension();
-		assert(dim == entryTimeDBM2._bounds_table._number_of_clocks);
+		assert(dim == entryTimeDBM2.dimension());
 		std::vector<decimal> entry_times(dim);
 		bool restricted[dim];
 		for(unsigned int i = 0;i < dim;i++){
@@ -260,34 +260,34 @@ namespace VerifyTAPN
 		for(unsigned int i = 1;i < dim;i++){
 			if(!restricted[i]){
 				bool lowerStrict = dbm_rawIsStrict(entryTimeDBM(0, i));
-				assert(lowerStrict == entryTimeDBM2._bounds_table.at(0, i)._strict);
+				assert(lowerStrict == entryTimeDBM2.at(0, i).is_strict());
 
 				decimal lower = decimal(-dbm_raw2bound(entryTimeDBM(0, i)));
-				assert(lower == decimal(entryTimeDBM2._bounds_table.at(0, i)._n));
+				assert(lower == decimal(entryTimeDBM2.at(0, i).get_bound()));
 
 				bool upperStrict = dbm_rawIsStrict(entryTimeDBM(i, 0));
-				assert(upperStrict == entryTimeDBM2._bounds_table.at(i, 0)._strict);
+				assert(upperStrict == entryTimeDBM2.at(i, 0).is_strict());
 
 				decimal upper = decimal(dbm_raw2bound(entryTimeDBM(i, 0)));
-				assert(upper == decimal(entryTimeDBM2._bounds_table.at(i, 0)._n));
+				assert(upper == decimal(entryTimeDBM2.at(i, 0).get_bound()));
 				// try to derive tighter bounds
 				for(unsigned int j = 1;j < dim;j++){
 					if(restricted[j] && i != j){
 						bool strict = dbm_rawIsStrict(entryTimeDBM(i, j));
-						assert(strict == entryTimeDBM2._bounds_table.at(i, j)._strict);
+						assert(strict == entryTimeDBM2.at(i, j).is_strict());
 
 						decimal bound = decimal(dbm_raw2bound(entryTimeDBM(i, j))) + entry_times[j];
-						assert(bound == decimal(entryTimeDBM2._bounds_table.at(i, j)._n));
+						assert(bound == decimal(entryTimeDBM2.at(i, j).get_bound()));
 
 						if(bound < upper || (bound == upper && strict)){
 							upperStrict = strict;
 							upper = bound;
 						}
 						strict = dbm_rawIsStrict(entryTimeDBM(j, i));
-						assert(strict == entryTimeDBM2._bounds_table.at(j, i)._strict);
+						assert(strict == entryTimeDBM2.at(j, i).is_strict());
 
 						bound = decimal(-dbm_raw2bound(entryTimeDBM(j, i))) + entry_times[j];
-						assert(bound == decimal(entryTimeDBM2._bounds_table.at(j, i)._n));
+						assert(bound == decimal(entryTimeDBM2.at(j, i).get_bound()));
 
 						if(bound > lower || (bound == lower && strict)){
 							lowerStrict = strict;

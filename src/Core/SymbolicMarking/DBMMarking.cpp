@@ -44,10 +44,10 @@ namespace VerifyTAPN
 		dbm.resize(bitSrc, bitDst, bitArraySize, table);
 
 		//TODO: Use add_clock instead
-		dbm2::DBM resized_new_dbm(newDimension);
+		pardibaal::DBM resized_new_dbm(newDimension);
 		for (int i = 0; i < oldDimension; i++)
 			for (int j = 0; j < oldDimension; j++)
-				resized_new_dbm._bounds_table.get(i, j) = new_dbm._bounds_table.at(i, j);
+				resized_new_dbm.set(i, j, new_dbm.at(i, j));
 		new_dbm = std::move(resized_new_dbm);
 
 		for (int i = oldDimension; i < newDimension; i++) {
@@ -82,7 +82,7 @@ namespace VerifyTAPN
 			dbmTokensToRemove.push_back(mapping.GetMapping(e));
 
 		for (int i = 0; i < dbmTokensToRemove.size(); i++)
-			new_dbm._bounds_table.remove_clock(dbmTokensToRemove.at(i));
+			new_dbm.remove_clock(dbmTokensToRemove.at(i));
 
 		unsigned int oldDimension = dbm.getDimension();
 
@@ -181,9 +181,9 @@ namespace VerifyTAPN
 		}
 
 		bool new_rtn = DiscreteMarking::IsUpperPositionGreaterThanPivot(upper, pivotIndex)
-			|| (placeUpper == pivot && new_dbm._bounds_table.at(0,mapUpper) >  new_dbm._bounds_table.at(0,mapPivot))
-			|| (placeUpper == pivot && new_dbm._bounds_table.at(0,mapUpper) == new_dbm._bounds_table.at(0,mapPivot) && new_dbm._bounds_table.at(mapUpper,0) > new_dbm._bounds_table.at(mapPivot,0))
-			|| (placeUpper == pivot && new_dbm._bounds_table.at(0,mapUpper) == new_dbm._bounds_table.at(0,mapPivot) && new_dbm._bounds_table.at(mapUpper,0) == new_dbm._bounds_table.at(mapPivot,0) && (mapPivot > mapUpper ? new_dbm._bounds_table.at(mapPivot,mapUpper) > new_dbm._bounds_table.at(mapUpper,mapPivot) : new_dbm._bounds_table.at(mapUpper,mapPivot) > new_dbm._bounds_table.at(mapPivot,mapUpper)));
+			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) >  new_dbm.at(0,mapPivot))
+			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) == new_dbm.at(0,mapPivot) && new_dbm.at(mapUpper,0) > new_dbm.at(mapPivot,0))
+			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) == new_dbm.at(0,mapPivot) && new_dbm.at(mapUpper,0) == new_dbm.at(mapPivot,0) && (mapPivot > mapUpper ? new_dbm.at(mapPivot,mapUpper) > new_dbm.at(mapUpper,mapPivot) : new_dbm.at(mapUpper,mapPivot) > new_dbm.at(mapPivot,mapUpper)));
 
 		bool rtn = DiscreteMarking::IsUpperPositionGreaterThanPivot(upper, pivotIndex)
 				   || (placeUpper == pivot && dbm(0,mapUpper) >  dbm(0,mapPivot))
@@ -199,7 +199,7 @@ namespace VerifyTAPN
 	{
 		DiscreteMarking::Swap(i,j);
 		dbm.swapClocks(mapping.GetMapping(i), mapping.GetMapping(j));
-		new_dbm._bounds_table.swap_clocks(mapping.GetMapping(i), mapping.GetMapping(j));
+		new_dbm.swap_clocks(mapping.GetMapping(i), mapping.GetMapping(j));
 
 		EqualityChecker::assertEqualDbms(dbm, new_dbm);
 	}

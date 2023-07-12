@@ -21,7 +21,7 @@ namespace VerifyTAPN {
 		{
 			dbm::dbm_t dbm(tokenPlacement.size()+1);
 			dbm.setZero();
-			dbm2::DBM new_dbm(tokenPlacement.size()+1);
+			pardibaal::DBM new_dbm(tokenPlacement.size()+1);
 			DBMMarking* marking = new DBMMarking(DiscretePart(tokenPlacement), dbm, new_dbm);
 			marking->id = 0;
 			return marking;

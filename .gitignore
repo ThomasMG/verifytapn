@@ -5,6 +5,7 @@ Release
 .settings
 build/
 .idea/
+.vscode/
 
 cmake-build-debug/
 cmake-build-release/

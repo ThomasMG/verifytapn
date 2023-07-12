@@ -12,7 +12,7 @@
 #include <dbm/print.h>
 #include "../../EqualityChecker.h"
 
-#include <dbm2/DBM.h>
+#include <pardibaal/DBM.h>
 
 namespace VerifyTAPN {
 
@@ -22,8 +22,8 @@ namespace VerifyTAPN {
 	public:
 		static std::shared_ptr<TAPN::TimedArcPetriNet> tapn;
 	public:
-		DBMMarking(const DiscretePart& dp,  const dbm::dbm_t& dbm, const dbm2::DBM& new_dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(new_dbm), mapping() {InitMapping(); assert(IsConsistent()); };
-		DBMMarking(const DiscretePart& dp, const TokenMapping& mapping,  const dbm::dbm_t& dbm, const dbm2::DBM& new_dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(new_dbm), mapping(mapping) { assert(IsConsistent()); };
+		DBMMarking(const DiscretePart& dp,  const dbm::dbm_t& dbm, const pardibaal::DBM& new_dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(new_dbm), mapping() {InitMapping(); assert(IsConsistent()); };
+		DBMMarking(const DiscretePart& dp, const TokenMapping& mapping,  const dbm::dbm_t& dbm, const pardibaal::DBM& new_dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(new_dbm), mapping(mapping) { assert(IsConsistent()); };
 		DBMMarking(const DBMMarking& dm) : DiscreteMarking(dm), dbm(dm.dbm), new_dbm(dm.new_dbm), mapping(dm.mapping) { };
 
 		DBMMarking(const DiscretePart& dp,  const dbm::dbm_t& dbm) : DiscreteMarking(dp), dbm(dbm), new_dbm(0), mapping() {InitMapping(); assert(IsConsistent()); };
@@ -71,7 +71,7 @@ namespace VerifyTAPN {
 			if(invariant.GetBound() != std::numeric_limits<int>::max())
 			{
 				dbm.constrain(mapping.GetMapping(token), 0, dbm_boundbool2raw(invariant.GetBound(), invariant.IsBoundStrict()));
-				new_dbm.restrict(mapping.GetMapping(token), 0, dbm2::bound_t(invariant.GetBound(), invariant.IsBoundStrict()));
+				new_dbm.restrict(mapping.GetMapping(token), 0, pardibaal::bound_t(invariant.GetBound(), invariant.IsBoundStrict()));
 			}
 
 			EqualityChecker::assertEqualDbms(dbm, new_dbm);
@@ -81,18 +81,18 @@ namespace VerifyTAPN {
 		{
 			int clock = mapping.GetMapping(token);
 			bool isLowerBoundSat = dbm.satisfies(0, clock, interval.LowerBoundToDBMRaw());
-			bool isLowerBoundSat2 = new_dbm.is_satisfied(0, clock, interval.LowerBoundToDBM2Bound());
+			bool isLowerBoundSat2 = new_dbm.is_satisfying(0, clock, interval.LowerBoundToDBM2Bound());
 			assert(isLowerBoundSat == isLowerBoundSat2);
 
 			bool isUpperBoundSat = dbm.satisfies(clock, 0, interval.UpperBoundToDBMRaw());
-			bool isUpperBoundSat2 = new_dbm.is_satisfied(clock, 0, interval.UpperBoundToDBM2Bound());
+			bool isUpperBoundSat2 = new_dbm.is_satisfying(clock, 0, interval.UpperBoundToDBM2Bound());
 			assert(isUpperBoundSat == isUpperBoundSat2);
 
 			bool inappropriateAge = !isLowerBoundSat || !isUpperBoundSat;
 			return !inappropriateAge;
 		};
 
-		//TODO: Maybe implement some fancy relation thing in dbm2?
+		//TODO: Maybe implement some fancy relation thing in pardibaal?
 		virtual relation Relation(const StoredMarking& other) const
 		{
 			relation_t relation = dbm.relation(static_cast<const DBMMarking&>(other).dbm);
@@ -102,11 +102,11 @@ namespace VerifyTAPN {
 		virtual void Extrapolate(const int* maxConstants) {
 			dbm.diagonalExtrapolateMaxBounds(maxConstants);
 
-			std::vector<dbm2::val_t> vec;
-			for (int i = 0; i < new_dbm._bounds_table._number_of_clocks; i++)
+			std::vector<pardibaal::val_t> vec;
+			for (int i = 0; i < new_dbm.dimension(); i++)
 				vec.push_back(maxConstants[i]);
 			vec[0] = 0;
-			new_dbm.diagonal_extrapolation(vec);
+			new_dbm.extrapolate_diagonal(vec);
 
 			EqualityChecker::assertEqualDbms(dbm, new_dbm);
 		};
@@ -116,10 +116,10 @@ namespace VerifyTAPN {
 		virtual void RemoveTokens(const std::set<int>& tokenIndices);
 
 		raw_t GetLowerBound(int clock) const { return dbm(0,clock); };
-		dbm2::bound_t GetLowerBound2(int clock) const { return new_dbm._bounds_table.at(0,clock); };
+		pardibaal::bound_t GetLowerBound2(int clock) const { return new_dbm.at(0,clock); };
 
 		const dbm::dbm_t& GetDBM() const { return dbm; };
-		const dbm2::DBM& GetDBM2() const { return new_dbm; };
+		const pardibaal::DBM& GetDBM2() const { return new_dbm; };
 
 		virtual void Print(std::ostream& out) const;
 
@@ -132,7 +132,7 @@ namespace VerifyTAPN {
 			{
 				return false;
 			}
-			assert(dbm.getDimension() == new_dbm._bounds_table._number_of_clocks);
+			assert(dbm.getDimension() == new_dbm.dimension());
 
 			if(mapping.size() != dp.size()) return false;
 
@@ -141,7 +141,7 @@ namespace VerifyTAPN {
 				unsigned int mappedIndex = mapping.GetMapping(i);
 				if(mappedIndex == 0 || mappedIndex >= dbm.getDimension())
 					return false;
-				if(mappedIndex == 0 || mappedIndex >= new_dbm._bounds_table._number_of_clocks)
+				if(mappedIndex == 0 || mappedIndex >= new_dbm.dimension())
 					return false;
 			}
 			return true;
@@ -154,7 +154,7 @@ namespace VerifyTAPN {
 
 	protected: // data
 		dbm::dbm_t dbm;
-		dbm2::DBM new_dbm;
+		pardibaal::DBM new_dbm;
 		TokenMapping mapping;
 		id_type id;
 

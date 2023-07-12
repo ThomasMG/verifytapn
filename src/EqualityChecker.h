@@ -23,21 +23,21 @@
 #define VERIFYTAPN_NEWDBMEQUALITY_H
 #include <dbm/fed.h>
 #include <dbm/print.h>
-#include <dbm2/DBM.h>
+#include <pardibaal/DBM.h>
 namespace VerifyTAPN {
 	class EqualityChecker {
 	public:
-		static bool dbm_equal_dbm2(dbm::dbm_t dbm, dbm2::DBM dbm2) {
-			if (dbm.getDimension() != dbm2._bounds_table._number_of_clocks)
+		static bool dbm_equal_dbm2(dbm::dbm_t dbm, pardibaal::DBM dbm2) {
+			if (dbm.getDimension() != dbm2.dimension())
 				return false;
 
 			if (!dbm.isEmpty() && !dbm2.is_empty()) {
 				for (int i = 0; i < dbm.getDimension(); i++) {
 					for (int j = 0; j < dbm.getDimension(); j++) {
-						if (dbm_raw2bound(dbm(i, j)) != dbm2._bounds_table.at(i, j)._n ||
-							dbm_raw2strict(dbm(i, j)) == dbm2._bounds_table.at(i, j)._strict) {
-							if (dbm_raw2bound(dbm(i, j)) == dbm_INFINITY && !dbm2._bounds_table.at(i, j)._inf ||
-								dbm_raw2bound(dbm(i, j)) != dbm_INFINITY && dbm2._bounds_table.at(i, j)._inf)
+						if (dbm_raw2bound(dbm(i, j)) != dbm2.at(i, j).get_bound() ||
+							dbm_raw2strict(dbm(i, j)) == dbm2.at(i, j).is_strict()) {
+							if (dbm_raw2bound(dbm(i, j)) == dbm_INFINITY && !dbm2.at(i, j).is_inf() ||
+								dbm_raw2bound(dbm(i, j)) != dbm_INFINITY && dbm2.at(i, j).is_inf())
 								return false;
 						}
 					}
@@ -46,7 +46,7 @@ namespace VerifyTAPN {
 			return true;
 		}
 
-		static void assertEqualDbms(dbm::dbm_t dbm, dbm2::DBM dbm2) {
+		static void assertEqualDbms(dbm::dbm_t dbm, pardibaal::DBM dbm2) {
 			if (!dbm_equal_dbm2(dbm, dbm2)) {
 				std::cout << "ERROR: DBM inconsistency!\nDBM:\n" << dbm << "New DBM:\n" << dbm2;
 			}
