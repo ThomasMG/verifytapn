@@ -76,19 +76,21 @@ namespace VerifyTAPN
 			dbmTokensToRemove.push_back(mapping.GetMapping(e));
 
 		unsigned int oldDimension = new_dbm.dimension();
-
-		for (int i = 0; i < dbmTokensToRemove.size(); i++)
-			new_dbm.remove_clock(dbmTokensToRemove.at(i));
-
-
-		assert(oldDimension-dbmTokensToRemove.size() > 0); // should at least be the zero clock left in the DBM
-
 		unsigned int table[oldDimension];
 
 		for(unsigned int i = 0; i < oldDimension; ++i)
 		{
 			table[i] = std::numeric_limits<unsigned int>().max();
 		}
+
+		for (int i = 0; i < dbmTokensToRemove.size(); i++) {
+			new_dbm.remove_clock(dbmTokensToRemove.at(i));
+			for (int k = dbmTokensToRemove.at(i); k < oldDimension; k++)
+				table[k] = k-1;
+		}
+
+
+		assert(oldDimension-dbmTokensToRemove.size() > 0); // should at least be the zero clock left in the DBM
 
 		// fix token mapping according to new DBM:
 		for(unsigned int i = 0; i < oldDimension; ++i)
