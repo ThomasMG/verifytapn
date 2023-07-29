@@ -14,24 +14,24 @@ namespace VerifyTAPN {
 		class TimedInputArc
 		{
 		public: // typedefs
-			typedef std::vector< std::shared_ptr<TimedInputArc> > Vector;
-			typedef std::vector< TimedInputArc* > NakedPtrVector;
+			typedef std::vector< TimedInputArc* > Vector;
+            typedef std::vector< const TimedInputArc* > CVector;
 		public:
-			TimedInputArc(const std::shared_ptr<TimedPlace>& place, const std::shared_ptr<TimedTransition>& transition) : interval(), place(place), transition(transition) { };
-			TimedInputArc(const std::shared_ptr<TimedPlace>& place, const std::shared_ptr<TimedTransition>& transition, const TimeInterval& interval) : interval(interval), place(place), transition(transition) { };
+			TimedInputArc(const TimedPlace* place, const TimedTransition* transition) : interval(), place(place), transition(transition) { };
+			TimedInputArc(const TimedPlace* place, const TimedTransition* transition, const TimeInterval& interval) : interval(interval), place(place), transition(transition) { };
 			virtual ~TimedInputArc() { /* empty */}
 
 		public: // modifiers
-			inline TimedPlace& InputPlace() { return *place; }
-			inline TimedTransition& OutputTransition() { return *transition; }
-			inline const TimeInterval& Interval() { return interval; }
+			inline const TimedPlace& InputPlace() const { return *place; }
+			inline const TimedTransition& OutputTransition() const { return *transition; }
+			inline const TimeInterval& Interval() const { return interval; }
 
 		public: // Inspectors
 			void Print(std::ostream& out) const;
 		private:
 			const TimeInterval interval;
-			const std::shared_ptr<TimedPlace> place;
-			const std::shared_ptr<TimedTransition> transition;
+			const TimedPlace* place;
+			const TimedTransition* transition;
 		};
 
 		inline std::ostream& operator<<(std::ostream& out, const TimedInputArc& arc)

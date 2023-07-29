@@ -7,7 +7,7 @@ namespace VerifyTAPN {
 			out << GetName() << "(" << index << ")";
 		}
 
-		void TimedTransition::AddToPreset(const std::shared_ptr<TimedInputArc>& arc)
+		void TimedTransition::AddToPreset(const TimedInputArc* arc)
 		{
 			if(arc)
 			{
@@ -15,7 +15,7 @@ namespace VerifyTAPN {
 			}
 		}
 
-		void TimedTransition::AddTransportArcGoingThrough(const std::shared_ptr<TransportArc>& arc)
+		void TimedTransition::AddTransportArcGoingThrough(const TransportArc* arc)
 		{
 			if(arc)
 			{
@@ -23,7 +23,7 @@ namespace VerifyTAPN {
 			}
 		}
 
-		void TimedTransition::AddIncomingInhibitorArc(const std::shared_ptr<InhibitorArc>& arc)
+		void TimedTransition::AddIncomingInhibitorArc(const InhibitorArc* arc)
 		{
 			if(arc)
 			{
@@ -31,7 +31,7 @@ namespace VerifyTAPN {
 			}
 		}
 
-		void TimedTransition::AddToPostset(const std::shared_ptr<OutputArc>& arc)
+		void TimedTransition::AddToPostset(const OutputArc* arc)
 		{
 			if(arc)
 			{

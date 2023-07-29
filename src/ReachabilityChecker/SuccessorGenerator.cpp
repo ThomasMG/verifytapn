@@ -53,7 +53,7 @@ namespace VerifyTAPN {
 
 		for(auto& trans : transitions)
 		{
-			for(auto* ta : trans->GetTransportArcs())
+			for(auto* ta : (*iter)->GetTransportArcs())
 			{
 				const TAPN::TimeInterval& ti = ta->Interval();
 				int currInputPlaceIndex = tapn.GetPlaceIndex(ta->Source());
@@ -62,7 +62,7 @@ namespace VerifyTAPN {
 				currInputArcIdx++;
 			}
 
-			for(auto* ia : trans->GetPreset())
+			for(auto* ia : (*iter)->GetPreset())
 			{
 				const TAPN::TimeInterval& ti = ia->Interval();
 				int currInputPlaceIndex = tapn.GetPlaceIndex(ia->InputPlace());
@@ -157,13 +157,13 @@ namespace VerifyTAPN {
 		bool trace = options.GetTrace() != NONE;
 
 		const Pairing& pairing = tapn.GetPairing(transition);
-		const TAPN::TimedInputArc::NakedPtrVector& preset = transition.GetPreset();
+		auto& preset = transition.GetPreset();
 		std::set<int> tokensToRemove; // sets are sorted internally in ascending order. THIS MUST BE THE CASE OR THE CODE WONT WORK!
 		SymbolicMarking* next = factory.Clone(*marking);
 
 		for(unsigned int i = 0; i < transition.NumberOfTransportArcs(); ++i)
 		{
-			TAPN::TransportArc* ta = transition.GetTransportArcs()[i];
+			auto* ta = transition.GetTransportArcs()[i];
 			const TAPN::TimeInterval& ti = ta->Interval();
 
 			int tokenIndex = tokenIndices[toIndex(currentTransitionIndex+i, currentPermutationindices[i])];
@@ -272,8 +272,8 @@ namespace VerifyTAPN {
 			// handle transport arcs
 			for(unsigned int i = 0; i < transition.NumberOfTransportArcs(); i++)
 			{
-				int tokenIndex = tokenIndices[toIndex(currentTransitionIndex+i, currentPermutationindices[i])];
-				TAPN::TransportArc* ia = transition.GetTransportArcs()[i];
+				int tokenIndex = tokenIndices->at_element(currentTransitionIndex+i, currentPermutationindices[i]);
+				auto* ia = transition.GetTransportArcs()[i];
 				const TAPN::TimeInterval& ti = ia->Interval();
 				int indexAfterFiring = tokenIndex;
 				for(auto to_remove : tokensToRemove)
@@ -291,8 +291,8 @@ namespace VerifyTAPN {
 			// handle normal arcs
 			for(unsigned int i = 0; i < transition.NumberOfInputArcs(); ++i)
 			{
-				int tokenIndex = tokenIndices[toIndex(currentTransitionIndex+offset+i, currentPermutationindices[offset+i])];
-				TAPN::TimedInputArc* ia = preset[i];
+				int tokenIndex = tokenIndices->at_element(currentTransitionIndex+offset+i, currentPermutationindices[offset+i]);
+				auto* ia = preset[i];
 				const TAPN::TimeInterval& ti = ia->Interval();
 				int indexAfterFiring = tokenIndex;
 				for(std::set<int>::iterator iter = tokensToRemove.begin(); iter != tokensToRemove.end(); ++iter)

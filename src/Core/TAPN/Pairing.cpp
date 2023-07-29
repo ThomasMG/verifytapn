@@ -7,8 +7,8 @@ namespace VerifyTAPN {
 using namespace TAPN;
 
 	void Pairing::GeneratePairingFor(const TimedArcPetriNet& tapn, const TAPN::TimedTransition& t) {
-		TimedInputArc::NakedPtrVector preset = t.GetPreset();
-		OutputArc::NakedPtrVector postset = t.GetPostset();
+		auto& preset = t.GetPreset();
+		auto& postset = t.GetPostset();
 
 		unsigned int sizeOfPairing = preset.size() >= postset.size() ? preset.size() : postset.size();
 
@@ -19,8 +19,8 @@ using namespace TAPN;
 		{
 			if(i < preset.size() && i < postset.size())
 			{
-				TimedInputArc* tiaPtr = preset[i];
-				OutputArc* oaPtr = postset[i];
+				auto* tiaPtr = preset[i];
+				auto* oaPtr = postset[i];
 
 				inputPlace = tapn.GetPlaceIndex(tiaPtr->InputPlace());
 				outputPlace = tapn.GetPlaceIndex(oaPtr->OutputPlace());
@@ -28,14 +28,14 @@ using namespace TAPN;
 				Add(inputPlace, outputPlace);
 			}
 			else if(i < preset.size() && i >= postset.size()){
-				TimedInputArc* tiaPtr = preset[i];
+				auto* tiaPtr = preset[i];
 
 				inputPlace = tapn.GetPlaceIndex(tiaPtr->InputPlace());
 				Add(inputPlace, TimedPlace::BottomIndex());
 			}
 			else if(i >= preset.size() && i < postset.size())
 			{
-				OutputArc* oaPtr = postset[i];
+				auto* oaPtr = postset[i];
 
 				outputPlace = tapn.GetPlaceIndex(oaPtr->OutputPlace());
 

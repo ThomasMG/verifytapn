@@ -17,7 +17,7 @@ namespace VerifyTAPN {
 		friend class UppaalDBMMarkingFactory;
 		friend class DiscreteInclusionMarkingFactory;
 	public:
-		static std::shared_ptr<TAPN::TimedArcPetriNet> tapn;
+		static const TAPN::TimedArcPetriNet* tapn;
 	public:
 		DBMMarking(const DiscretePart& dp, const pardibaal::DBM& new_dbm) : DiscreteMarking(dp), new_dbm(new_dbm), mapping() {InitMapping(); assert(IsConsistent()); };
 		DBMMarking(const DiscretePart& dp, const TokenMapping& mapping, const pardibaal::DBM& new_dbm) : DiscreteMarking(dp), new_dbm(new_dbm), mapping(mapping) { assert(IsConsistent()); };

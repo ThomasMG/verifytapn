@@ -2,7 +2,7 @@
 #define VERIFYTAPN_TAPN_OUTPUTARC_HPP_
 
 #include <vector>
-#include <memory>
+#include <ostream>
 
 namespace VerifyTAPN {
 	namespace TAPN {
@@ -12,22 +12,22 @@ namespace VerifyTAPN {
 		class OutputArc
 		{
 		public: // typedefs
-			typedef std::vector< std::shared_ptr<OutputArc> > Vector;
-			typedef std::vector< OutputArc* > NakedPtrVector;
+			typedef std::vector<OutputArc* > Vector;
+            typedef std::vector<const OutputArc* > CVector;
 		public:
-			OutputArc(const std::shared_ptr<TimedTransition>& transition, const std::shared_ptr<TimedPlace>& place)
+			OutputArc(const TimedTransition* transition, const TimedPlace* place)
 				: transition(transition), place(place) { };
 			virtual ~OutputArc() { /* empty */ }
 
 		public: // modifiers
-			TimedPlace& OutputPlace();
-			TimedTransition& InputTransition();
+			const TimedPlace& OutputPlace() const;
+			const  TimedTransition& InputTransition() const;
 
 		public: // inspectors
 			void Print(std::ostream& out) const;
 		private:
-			const std::shared_ptr<TimedTransition> transition;
-			const std::shared_ptr<TimedPlace> place;
+			const TimedTransition* transition;
+			const TimedPlace* place;
 		};
 
 		inline std::ostream& operator<<(std::ostream& out, const OutputArc& arc)
