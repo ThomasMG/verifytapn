@@ -16,25 +16,29 @@ namespace VerifyTAPN {
 	class SuccessorGenerator {
 	public:
 	    SuccessorGenerator(const TAPN::TimedArcPetriNet & tapn, const MarkingFactory & factory, const VerificationOptions & options, unsigned int tokensInInitialMarking)
-	    :tapn(tapn), factory(factory), arcsArray(tapn.GetNumberOfConsumingArcs()),
-                nInputArcs(tapn.GetNumberOfConsumingArcs()),
-                transitionStatistics(tapn.GetNumberOfTransitions()),
-                numberOfTransitions(tapn.GetNumberOfTransitions()),
-                options(options),
-                tokenIndices(nInputArcs * options.GetKBound()),
-                maxUsedTokens(tokensInInitialMarking)
+	    :tapn(tapn), factory(factory), arcsArray(), nInputArcs(tapn.GetNumberOfConsumingArcs()), transitionStatistics(), numberOfTransitions(tapn.GetNumberOfTransitions()), options(options), tokenIndices(), maxUsedTokens(tokensInInitialMarking)
 	    {
+	        arcsArray = new unsigned [nInputArcs];
+	        transitionStatistics = new unsigned [numberOfTransitions];
+	        tokenIndices = new boost::numeric::ublas::matrix<int>(nInputArcs, options.GetKBound());
 	        ClearTransitionsArray();
 	    }
 
 	    ;
 	    virtual ~SuccessorGenerator()
-	    {}
+	    {
+	        delete [] arcsArray;
+	        delete tokenIndices;
+		delete [] transitionStatistics;
+	    }
 
 	    ;
 	public:
 	    void GenerateDiscreteTransitionsSuccessors(const SymbolicMarking & marking, std::vector<VerifyTAPN::Successor> & succ);
+	public:
+	    void Print(std::ostream & out) const;
 	    void PrintTransitionStatistics(std::ostream & out) const;
+	public:
 	    inline void ClearAll()
 	    {
 	        ClearArcsArray();
@@ -43,16 +47,16 @@ namespace VerifyTAPN {
 
 	    inline void ClearArcsArray()
 	    {
-            std::fill(arcsArray.begin(), arcsArray.end(), 0);
+	        memset(arcsArray, 0, nInputArcs * sizeof (arcsArray[0]));
 	    }
 
 	    inline void ClearTransitionsArray() {
-            std::fill(transitionStatistics.begin(), transitionStatistics.end(), 0);
+	    	memset(transitionStatistics, 0, numberOfTransitions * sizeof (transitionStatistics[0]));
 	    }
 
 	    inline void ClearTokenIndices()
 	    {
-            std::fill(tokenIndices.begin(), tokenIndices.end(), 0);
+	        tokenIndices->clear();
 	    }
 
 	    unsigned int MaxUsedTokens() const
@@ -69,23 +73,22 @@ namespace VerifyTAPN {
 
 	    void MakeIdentity(IndirectionTable& mapping, unsigned int size) const;
 	    void UpdateTraceMapping(IndirectionTable& mapping, unsigned int tokenToRemove) const;
-        uint64_t toIndex(int currInputArcIdx, int nTokensFromCurrInputPlace) {
-            return currInputArcIdx*options.GetKBound() + nTokensFromCurrInputPlace;
-        }
-        int getIndicy(int currInputArcIdx, uint32_t nTokensFromCurrInputPlace) {
-            return tokenIndices[toIndex(currInputArcIdx, nTokensFromCurrInputPlace)];
-        }
 	private:
 	    const TAPN::TimedArcPetriNet& tapn;
 		const MarkingFactory& factory;
-		std::vector<uint32_t> arcsArray;
+		unsigned int* arcsArray;
 		unsigned int nInputArcs;
-		std::vector<uint32_t> transitionStatistics;
+		unsigned int* transitionStatistics;
 		const int numberOfTransitions;
 		const VerificationOptions& options;
-		std::vector<int> tokenIndices;
+		boost::numeric::ublas::matrix<int>* tokenIndices;
 		unsigned int maxUsedTokens;
 	};
 
+	inline std::ostream& operator<<(std::ostream& out, const VerifyTAPN::SuccessorGenerator& succGen)
+	{
+		succGen.Print( out );
+		return out;
+	}
 }
 #endif /* SUCCESSORGENERATOR_HPP_ */

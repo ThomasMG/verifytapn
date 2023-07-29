@@ -8,8 +8,8 @@ add_library(SymbolicMarking
 )
 
 
-add_dependencies(SymbolicMarking udbm-ext boost-ext)
+add_dependencies(SymbolicMarking pardibaal-ext boost-ext)
 
 #target_link_libraries(SymbolicMarking
-#	 ${EXTERNAL_INSTALL_LOCATION}/uppaal/lib/libudbm.a
+#	 ${EXTERNAL_INSTALL_LOCATION}/uppaal/lib/libpardibaal.a
 #)

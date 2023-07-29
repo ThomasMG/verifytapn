@@ -11,7 +11,7 @@ namespace VerifyTAPN {
 		{
 			if(arc)
 			{
-				preset.push_back(arc.get());
+				preset.push_back(arc);
 			}
 		}
 
@@ -19,7 +19,7 @@ namespace VerifyTAPN {
 		{
 			if(arc)
 			{
-				transportArcs.push_back(arc.get());
+				transportArcs.push_back(arc);
 			}
 		}
 
@@ -27,7 +27,7 @@ namespace VerifyTAPN {
 		{
 			if(arc)
 			{
-				inhibitorArcs.push_back(arc.get());
+				inhibitorArcs.push_back(arc);
 			}
 		}
 
@@ -35,12 +35,8 @@ namespace VerifyTAPN {
 		{
 			if(arc)
 			{
-				postset.push_back(arc.get());
+				postset.push_back(arc);
 			}
 		}
 	}
 }
-
-
-
-

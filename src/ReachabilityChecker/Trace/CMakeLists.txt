@@ -3,4 +3,4 @@ add_library(Trace
 	EntrySolver.cpp
 	TraceStore.cpp
 )
-add_dependencies(Trace rapidxml-ext udbm-ext sparsehash-ext)
+add_dependencies(Trace rapidxml-ext pardibaal-ext sparsehash-ext)
