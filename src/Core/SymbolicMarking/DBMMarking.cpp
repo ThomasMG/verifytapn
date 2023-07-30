@@ -71,9 +71,9 @@ namespace VerifyTAPN
 	// the original dbm (bitSrc) and which are in the resulting DBM (bitDst).
 	void DBMMarking::RemoveTokens(const std::set<int>& tokenIndices)
 	{
-		std::vector<int> dbmTokensToRemove;
+		std::set<int> dbmTokensToRemove;
 		for (const auto &e : tokenIndices)
-			dbmTokensToRemove.push_back(mapping.GetMapping(e));
+			dbmTokensToRemove.insert(mapping.GetMapping(e));
 
 		unsigned int oldDimension = new_dbm.dimension();
 		unsigned int table[oldDimension];
@@ -83,10 +83,13 @@ namespace VerifyTAPN
 			table[i] = std::numeric_limits<unsigned int>().max();
 		}
 
-		for (int i = 0; i < dbmTokensToRemove.size(); i++) {
-			new_dbm.remove_clock(dbmTokensToRemove.at(i));
-			for (int k = dbmTokensToRemove.at(i); k < oldDimension; k++)
-				table[k] = k-1;
+		for (std::set<int>::const_reverse_iterator it = dbmTokensToRemove.rbegin(); it != dbmTokensToRemove.rend(); it++) {
+			new_dbm.remove_clock(*it);
+			for (int k = *it; k < oldDimension; k++)
+				if (table[k] == std::numeric_limits<unsigned int>().max())
+					table[k] = k-1;
+				else
+					table[k] -= 1;
 		}
 
 
