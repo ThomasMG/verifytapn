@@ -112,6 +112,7 @@ if (VERIFYTAPN_GetDependencies)
 				   -DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}
 				   -DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}
 				   -DPARDIBAAL_BuildTests=OFF
+				   -DCMAKE_BUILD_TYPE=Release
 	)
     ExternalProject_add(unfoldtacpn-ext
         GIT_REPOSITORY https://github.com/TAPAAL/unfoldTACPN
