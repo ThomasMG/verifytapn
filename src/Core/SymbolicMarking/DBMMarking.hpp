@@ -78,11 +78,7 @@ namespace VerifyTAPN {
 		}
 
 		virtual void Extrapolate(const int* maxConstants) {
-			std::vector<pardibaal::val_t> vec;
-			for (int i = 0; i < new_dbm.dimension(); i++)
-				vec.push_back(maxConstants[i]);
-			vec[0] = 0;
-			new_dbm.extrapolate_diagonal(vec);
+			new_dbm.extrapolate_diagonal(std::vector<pardibaal::val_t>(maxConstants, maxConstants + new_dbm.dimension()));
 		};
 		virtual unsigned int GetClockIndex(unsigned int token) const { return mapping.GetMapping(token); };
 
@@ -102,6 +98,7 @@ namespace VerifyTAPN {
 
 		bool IsConsistent() const
 		{
+			if (dp.size() != new_dbm.dimension() -1) return false;
 			if(mapping.size() != dp.size()) return false;
 
 			for(unsigned int i = 0; i < dp.size(); i++)

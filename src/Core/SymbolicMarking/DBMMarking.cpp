@@ -16,30 +16,6 @@ namespace VerifyTAPN
 		unsigned int oldDimension = new_dbm.dimension();
 		unsigned int newDimension = oldDimension + nAdditionalTokens;
 
-		unsigned int bitArraySize = (newDimension % 32 == 0 ? newDimension/32 : newDimension/32+1);
-
-		unsigned int bitSrc[bitArraySize];
-		unsigned int bitDst[bitArraySize];
-		unsigned int table[newDimension];
-
-		// setup the bitvectors
-		for(unsigned int i = 0; i < bitArraySize; ++i)
-		{
-			if(oldDimension >= i*32 && oldDimension < (i+1)*32)
-				bitSrc[i] = 0 | ((1 << oldDimension%32)-1);
-			else if(oldDimension >= i*32 && oldDimension >= (i+1)*32)
-				bitSrc[i] = ~(bitSrc[i] & 0);
-			else
-				bitSrc[i] = 0;
-
-			bitDst[i] = ~(bitDst[i] & 0);
-		}
-
-		if(newDimension%32 != 0)
-		{
-			bitDst[bitArraySize-1] ^= ~((1 << newDimension % 32)-1);
-		}
-
 		//TODO: Use add_clock instead
 		pardibaal::DBM resized_new_dbm(newDimension);
 		for (int i = 0; i < oldDimension; i++)
@@ -141,12 +117,18 @@ namespace VerifyTAPN
 			std::cout << "*";
 		}
 
-		bool rtn = DiscreteMarking::IsUpperPositionGreaterThanPivot(upper, pivotIndex)
-			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) >  new_dbm.at(0,mapPivot))
-			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) == new_dbm.at(0,mapPivot) && new_dbm.at(mapUpper,0) > new_dbm.at(mapPivot,0))
-			|| (placeUpper == pivot && new_dbm.at(0,mapUpper) == new_dbm.at(0,mapPivot) && new_dbm.at(mapUpper,0) == new_dbm.at(mapPivot,0) && (mapPivot > mapUpper ? new_dbm.at(mapPivot,mapUpper) > new_dbm.at(mapUpper,mapPivot) : new_dbm.at(mapUpper,mapPivot) > new_dbm.at(mapPivot,mapUpper)));
+		auto l_mapUpper = new_dbm.at(0,mapUpper),
+		     l_mapPivot = new_dbm.at(0,mapPivot),
+			 u_mapUpper = new_dbm.at(mapUpper,0),
+			 u_mapPivot = new_dbm.at(mapPivot,0),
+			 pivot_upper = new_dbm.at(mapPivot,mapUpper),
+			 upper_pivot = new_dbm.at(mapUpper,mapPivot);
 
-		return rtn;
+
+		return DiscreteMarking::IsUpperPositionGreaterThanPivot(upper, pivotIndex)
+			|| (placeUpper == pivot && l_mapUpper >  l_mapPivot)
+			|| (placeUpper == pivot && l_mapUpper == l_mapPivot && u_mapUpper > u_mapPivot)
+			|| (placeUpper == pivot && l_mapUpper == l_mapPivot && u_mapUpper == u_mapPivot && (mapPivot > mapUpper ? pivot_upper > upper_pivot : upper_pivot > pivot_upper));
 	}
 
 	void DBMMarking::Swap(int i, int j)
